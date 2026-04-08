@@ -1,0 +1,8 @@
+# macOS
+.DS_Store
+
+# GitHub CLI download (not part of the project)
+gh_2.89.0_macOS_amd64/
+
+# Claude Code internals
+.claude/
