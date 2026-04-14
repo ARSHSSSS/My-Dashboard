@@ -237,6 +237,7 @@ function applyAccentColor(colorId) {
   s.textContent = [
     `.nav-link.active{color:${hex}!important;background:${hex}22!important}`,
     `.nav-link.active .icon{color:${hex}!important}`,
+    `.nav-link .badge{background:${hex}18!important;color:${hex}!important;border-color:${hex}44!important}`,
     `.filter-tab.active{border-color:${hex}!important;color:${hex}!important}`,
   ].join('');
 }
