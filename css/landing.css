@@ -784,3 +784,93 @@ button { cursor: pointer; border: none; outline: none; background: none; }
   .footer-links   { grid-template-columns: 1fr 1fr; }
   .footer-bottom  { flex-direction: column; gap: 12px; text-align: center; }
 }
+
+/* ══════════════════════════════════════════════════
+   Language Switcher
+   ══════════════════════════════════════════════════ */
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.lang-btn {
+  padding: 5px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: var(--muted);
+  border-radius: 6px;
+  transition: background .15s, color .15s;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+.lang-btn:hover  { color: var(--text); background: var(--border); }
+.lang-btn.active { background: var(--accent); color: #fff; }
+
+/* ══════════════════════════════════════════════════
+   Persian / RTL overrides
+   ══════════════════════════════════════════════════ */
+[dir="rtl"] {
+  font-family: 'Vazirmatn', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Navbar */
+[dir="rtl"] .nav-inner     { direction: rtl; }
+[dir="rtl"] .nav-links     { flex-direction: row-reverse; }
+[dir="rtl"] .nav-actions   { flex-direction: row-reverse; }
+[dir="rtl"] .nav-logo      { flex-direction: row-reverse; }
+[dir="rtl"] .nav-logo > div { text-align: right; }
+
+/* Hero */
+[dir="rtl"] .hero-inner    { direction: rtl; }
+[dir="rtl"] .hero-text     { text-align: right; }
+[dir="rtl"] .hero-text h1  { letter-spacing: 0; }
+[dir="rtl"] .hero-ctas     { flex-direction: row-reverse; justify-content: flex-end; }
+[dir="rtl"] .hero-meta     { flex-direction: row-reverse; justify-content: flex-end; }
+[dir="rtl"] .hero-text p   { max-width: 100%; }
+
+/* Stats */
+[dir="rtl"] .stats-grid    { direction: rtl; }
+
+/* Section headers */
+[dir="rtl"] .section-header { direction: rtl; text-align: right; }
+
+/* Features */
+[dir="rtl"] .feature-card  { text-align: right; direction: rtl; }
+
+/* Steps */
+[dir="rtl"] .steps-grid    { flex-direction: row-reverse; direction: rtl; }
+[dir="rtl"] .step-card     { text-align: right; }
+[dir="rtl"] .step-number   { text-align: right; }
+
+/* Testimonials */
+[dir="rtl"] .testimonial-card    { text-align: right; direction: rtl; }
+[dir="rtl"] .testimonial-author  { flex-direction: row-reverse; }
+
+/* Pricing */
+[dir="rtl"] .pricing-card        { text-align: right; direction: rtl; }
+[dir="rtl"] .plan-features       { padding-right: 0; padding-left: 0; list-style: none; }
+
+/* CTA Banner */
+[dir="rtl"] .cta-inner           { direction: rtl; }
+[dir="rtl"] .cta-actions         { flex-direction: row-reverse; justify-content: center; }
+
+/* Footer */
+[dir="rtl"] .footer-top          { direction: rtl; }
+[dir="rtl"] .footer-brand        { text-align: right; }
+[dir="rtl"] .footer-logo         { flex-direction: row-reverse; }
+[dir="rtl"] .footer-col          { text-align: right; }
+[dir="rtl"] .footer-bottom       { direction: rtl; flex-direction: row-reverse; }
+[dir="rtl"] .footer-bottom-links { flex-direction: row-reverse; }
+
+/* Responsive RTL tweaks */
+@media (max-width: 680px) {
+  [dir="rtl"] .hero-ctas  { flex-direction: column; }
+  [dir="rtl"] .hero-meta  { flex-direction: column; }
+  [dir="rtl"] .cta-actions { flex-direction: column; }
+}
