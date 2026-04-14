@@ -200,12 +200,21 @@ function getAvatarBg(user) {
 }
 
 function applyUserColor(user) {
+  /* Only colours the avatar circle — nav is handled by applyAccentColor() */
   const id  = (user.avatarType !== 'emoji' && user.avatarValue) ? user.avatarValue : nameToColorId(user.name);
   const hex = AVATAR_COLORS.find(c => c.id === id)?.hex || '#6366f1';
   document.documentElement.style.setProperty('--user-color', hex);
-  let s = document.getElementById('user-color-style');
-  if (!s) { s = document.createElement('style'); s.id = 'user-color-style'; document.head.appendChild(s); }
-  s.textContent = `.nav-link.active{color:${hex}!important;background:${hex}22!important}.nav-link.active .icon{color:${hex}!important}`;
+}
+
+function applyAccentColor(colorId) {
+  const hex = AVATAR_COLORS.find(c => c.id === colorId)?.hex || '#3b82f6';
+  let s = document.getElementById('accent-color-style');
+  if (!s) { s = document.createElement('style'); s.id = 'accent-color-style'; document.head.appendChild(s); }
+  s.textContent = [
+    `.nav-link.active{color:${hex}!important;background:${hex}22!important}`,
+    `.nav-link.active .icon{color:${hex}!important}`,
+    `.filter-tab.active{border-color:${hex}!important;color:${hex}!important}`,
+  ].join('');
 }
 
 function handleLogin() {
@@ -342,6 +351,7 @@ function initDashboard() {
   }
   document.getElementById('userName').textContent = u.name;
   applyUserColor(u);
+  applyAccentColor(Store.get('preferences')?.accentColor || 'blue');
   renderNotifications();
   updateSidebarBadges();
 }
@@ -1004,6 +1014,20 @@ function renderPreferences() {
             <button class="theme-opt ${theme === 'light' ? 'active' : ''}" data-action="set-theme" data-theme="light">☀️ Light</button>
           </div>
         </div>
+        <div class="pref-row" style="align-items:flex-start;flex-direction:column;gap:10px;">
+          <div>
+            <div class="pref-label">Sidebar accent colour</div>
+            <div class="pref-sub">Colour used for active navigation links and filter tabs</div>
+          </div>
+          <div class="avatar-color-grid">
+            ${AVATAR_COLORS.map(c => {
+              const sel = (prefs?.accentColor || 'blue') === c.id;
+              return `<div class="avatar-swatch${sel ? ' selected' : ''}"
+                data-action="set-accent-color" data-color="${c.id}"
+                style="background:${c.bg}" title="${c.id}">${sel ? '✓' : ''}</div>`;
+            }).join('')}
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1586,6 +1610,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (action === 'set-theme') {
       applyTheme(theme);
       document.getElementById('mainContent').innerHTML = renderPreferences(); return;
+    }
+    if (action === 'set-accent-color') {
+      const prefs = Store.get('preferences');
+      prefs.accentColor = btn.dataset.color;
+      Store.set('preferences', prefs);
+      applyAccentColor(btn.dataset.color);
+      document.getElementById('mainContent').innerHTML = renderPreferences();
+      showToast('Accent colour updated.', 'success'); return;
     }
     if (action === 'reset-data') {
       Store.reset();
