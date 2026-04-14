@@ -1,107 +1,157 @@
 # ForexGuard — Risk Management Portal
 
-A lightweight, single-page dashboard for Forex risk management agents. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no build tools, no dependencies.
+A fully functional, client-side single-page application (SPA) for Forex risk management agents. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no build tools, no backend required.
+
+**Live demo:** https://arshssss.github.io/My-Dashboard/
 
 ---
 
-## Preview
+## Screens
 
-| Screen | Description |
-|--------|-------------|
-| Login / Sign Up | Auth screens with form validation |
-| Dashboard | Full risk overview with live widgets |
+| Screen | URL |
+|--------|-----|
+| Landing page | `/landing.html` |
+| Login / Sign Up | `/index.html` |
+| Dashboard (all 12 pages) | `/index.html` (after login) |
+
+**Demo credentials:** `demo@forexguard.com` / `Demo@2026`
 
 ---
 
 ## Project Structure
 
 ```
-my-dashboard/
-├── index.html        # App entry point — all screens and markup
+My-Dashboard/
+├── index.html          # SPA shell — all screens, sidebar, topbar, modal
+├── landing.html        # Marketing landing page
 ├── css/
-│   └── styles.css    # All styles (layout, components, responsive)
+│   ├── styles.css      # Dashboard styles (layout, components, theming)
+│   └── landing.css     # Landing page styles
 ├── js/
-│   └── app.js        # All logic (auth, dashboard init, chart, events)
-└── .gitignore
+│   ├── data.js         # Seed data + Store class (localStorage wrapper)
+│   └── app.js          # All SPA logic (router, pages, auth, events)
+├── LICENSE
+└── README.md
 ```
 
 ---
 
 ## Features
 
-### Authentication
-- **Login** — accepts any email + password combination (demo mode); extracts a display name from the email prefix
-- **Sign Up** — registers a name, email, and password; immediately transitions to the dashboard
-- **Logout** — returns to the login screen and clears the form fields
-- **Enter key support** — pressing Enter on either auth screen submits the form
+### Authentication & Session
+- **Login** — validates credentials against a hardcoded demo account or any registered account stored in `localStorage`
+- **Sign Up** — registers name, email, and password; duplicate-email check; minimum 6-character password
+- **30-minute session** — after logging in, refreshing the page restores the session automatically; any navigation resets the idle timer
+- **Demo account hint** — credentials displayed on the login screen for easy onboarding
+- **Enter key support** — submits whichever auth form is active
+
+### User Profile & Avatar
+- **My Profile page** — dedicated page showing a hero card with login count, total actions, member-since date, and last-active date
+- **Edit info** — update display name and email directly from the profile page
+- **Avatar picker** — choose from 8 colour gradient presets (Indigo, Blue, Violet, Emerald, Rose, Amber, Cyan, Pink) or 12 emoji options (🦁 🐯 🦊 🐺 🦅 🐉 🦄 🌊 ⚡ 🔥 🎯 🛡️)
+- **Auto-assigned colour** — on first login, a unique gradient is assigned based on a hash of the user's name
+- **Avatar colour theme** — the active navigation highlight colour matches the user's chosen avatar colour across the whole sidebar
+- **Change password** — validates old password before updating; disabled for the demo account
+- **Profile dropdown** — clicking the topbar avatar opens a popover menu (My Profile, Preferences, Sign Out)
+
+### Navigation
+- **Client-side router** — `navigate(page)` renders pages into `#mainContent` without any page reload
+- **12 pages:** Dashboard, Account Statements, Repeat Accounts, Client Profiles, KYC Reviews, Risk Alerts, Exposure Reports, Audit Logs, Support Emails, Tickets, Preferences, My Profile
+- **Live sidebar badges** — counts update immediately whenever a case is approved, resolved, or closed
+- **Keyboard shortcut** — `Escape` closes any open modal, search overlay, or panel
 
 ### Dashboard
-Once logged in, the dashboard initialises with:
-- A personalised greeting (`Good morning/afternoon/evening, [Name]`)
-- The current date displayed in the top bar
-- User initials auto-generated and shown in the avatar
+- Personalised greeting (`Good morning/afternoon/evening, [Name]`)
+- 4 stat cards with live counts from the data store
+- 7-day activity bar chart (Chart.js) with dark/light theme support
+- Quick-action buttons for common agent tasks
+- Recent statements table and inbox preview widgets
 
-### Stat Cards
-Four summary cards at the top of the dashboard:
-| Card | Value |
-|------|-------|
-| Pending Statements | 14 |
-| Repeat Account Requests | 7 (2 urgent) |
-| Unread Support Emails | 5 |
-| Resolved Today | 9 |
+### Account Statements
+- Full table with filter tabs: All / Pending / Flagged / Approved
+- Click any row to open a detail modal
+- Approve or Reject directly from the modal or inline
 
-### Account Statements Table
-A paginated-style table listing clients with pending or flagged account statements. Each row shows:
-- Client name with colour-coded avatar
-- Account ID
-- Balance
-- Status pill (Pending / Flagged / In Review)
-- Submission date
+### Repeat Accounts
+- Cards with filter tabs: All / Pending / Approved / Denied
+- Approve / Deny actions with instant Store update and audit log entry
+
+### Client Profiles
+- Live search — filters the table as you type
+- Click any row for a full detail modal (email, phone, balance, KYC status, currency pair, join date)
+
+### KYC Reviews
+- Colour-coded status pills: Valid / Expiring / Expired
+- Renew and Notify actions per document
 
 ### Risk Alerts
-A scrollable list of active risk events, each with:
-- Severity icon (red / amber / blue)
-- Title and short description
-- Timestamp
+- Filter tabs: All / Active / Resolved
+- Full-detail modal with severity header and Resolve action
+- Resolved alerts disappear from the notification bell (but remain visible on this page)
 
-### Repeat Account Requests
-A list of clients requesting a second account. Each entry has:
-- Client name and previous account history
-- **Approve** button — greys out the row and confirms approval
-- **Deny** button — greys out the row and marks as denied
+### Exposure Reports
+- Line chart (open exposure over time) and doughnut chart (currency pair breakdown) via Chart.js
+- Summary table of top currency exposures
+
+### Audit Logs
+- Timeline view of every agent action (approvals, logins, password changes, etc.)
+- Last 150 entries kept in `localStorage`
 
 ### Support Emails
-An inbox-style list of support emails. Clicking any email:
-- Removes the `unread` highlight
-- Hides the blue unread dot
+- Split-panel layout: email list on the left, reading pane on the right
+- Compose and Reply modals
+- Unread count updates the sidebar badge and notification bell in real time
 
-### Quick Actions
-A 2×2 grid of shortcut buttons for common agent tasks:
-- Review Statement
-- Create Free Account (repeat client)
-- Reply to Email
-- Generate Risk Report PDF
+### Tickets
+- Filter tabs: All / Open / In Progress / Closed
+- Detail modal with status transitions (Open → In Progress → Closed)
+- Create New Ticket modal
 
-### Activity Bar Chart
-A simple 7-day bar chart showing cases resolved per day. Built dynamically in JavaScript — today's bar is highlighted in blue.
+### Notifications (Bell)
+- Shows up to 5 active alerts + 3 unread emails
+- Clicking an item dismisses it from the panel and navigates to the relevant page
+- **Clear All** marks all active alerts as panel-dismissed and all emails as read instantly
+- Bell dot disappears when there are no pending notifications
+
+### Preferences
+- Theme switcher (dark / light) with toggle button in the topbar
+- Per-key notification toggles (Risk Alerts, KYC Expiry, Repeat Accounts, New Emails, System Updates)
+- Reset demo data — restores all Store data to its original seed state
+
+### Search
+- Global search overlay (`Ctrl/Cmd + K` or click 🔍)
+- Filters client profiles by name, email, or country
 
 ---
 
-## How to Run
+## Data Layer (`js/data.js`)
 
-No installation or build step required.
+All data is stored in `localStorage` under `fg-*` keys. On first load, seed data is written automatically.
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/ARSHSSSS/My-Dashboard.git
-   cd My-Dashboard
-   ```
+```
+fg-statements       — 12 account statements
+fg-repeatAccounts   — 7 repeat account requests
+fg-clients          — 10 client profiles
+fg-kyc              — 7 KYC records
+fg-alerts           — 6 risk alerts
+fg-emails           — 6 support emails
+fg-tickets          — 7 support tickets
+fg-audit            — agent action log (last 150 entries)
+fg-preferences      — notification toggles + theme
+fg-accounts         — registered user credentials
+fg-profile-{email}  — per-user avatar, login count, join date
+fg-session          — active session with 30-min expiry timestamp
+```
 
-2. Open `index.html` in your browser:
-   ```bash
-   open index.html
-   ```
-   Or just double-click the file in Finder.
+### Store API
+
+| Method | Description |
+|--------|-------------|
+| `Store.get(key)` | Read array from localStorage (seeds on first access) |
+| `Store.set(key, data)` | Write array to localStorage |
+| `Store.update(key, id, changes)` | Find record by `id`, merge changes, save |
+| `Store.addAudit(action, target, detail)` | Prepend to audit log, keep last 150 |
+| `Store.reset()` | Remove all `fg-*` keys (resets to seed data on next read) |
 
 ---
 
@@ -109,36 +159,56 @@ No installation or build step required.
 
 | Function | Description |
 |----------|-------------|
+| `navigate(page)` | Client-side router — renders a page and updates the sidebar |
 | `showScreen(name)` | Switches between `login`, `signup`, and `dashboard` screens |
-| `handleLogin()` | Validates login form and transitions to the dashboard |
-| `handleSignup()` | Validates signup form and transitions to the dashboard |
-| `handleLogout()` | Clears session and returns to login |
-| `initDashboard()` | Sets user name, avatar, greeting, date, and builds the chart |
-| `buildChart()` | Renders the 7-day bar chart dynamically using DOM elements |
-| `setActive(el)` | Updates the active state on sidebar navigation links |
+| `handleLogin()` | Validates credentials, loads profile data, saves session |
+| `handleSignup()` | Registers a new account, saves credentials and profile |
+| `handleLogout()` | Clears session and returns to the login screen |
+| `initDashboard()` | Updates topbar avatar, name, colour theme, badges |
+| `updateSidebarBadges()` | Recomputes all sidebar badge counts from the Store |
+| `renderNotifications()` | Rebuilds the bell panel from live Store data |
+| `applyUserColor(user)` | Injects a `<style>` tag to theme the nav with the user's avatar colour |
+| `saveSession(user)` | Writes session + 30-min expiry to localStorage |
+| `loadSession()` | Returns the saved user if the session is still valid |
+| `renderProfile()` | Renders the My Profile page (hero card, avatar picker, password change) |
+| `renderDashboard()` | Renders the main dashboard with charts and widgets |
+| `openModal(title, html)` | Opens the shared modal with given content |
+| `showToast(message, type)` | Shows a transient toast notification (success / error / info) |
+| `applyTheme(theme)` | Applies dark/light theme and updates chart colours |
 
 ---
 
-## Responsive Behaviour
+## How to Run Locally
 
-| Breakpoint | Layout change |
-|------------|---------------|
-| `≤ 1100px` | Stat cards go 2-column; widgets stack vertically; bottom grid goes 2-column |
-| `≤ 720px` | Stat cards go 2-column; bottom grid goes 1-column |
+No installation or build step required.
+
+```bash
+git clone https://github.com/ARSHSSSS/My-Dashboard.git
+cd My-Dashboard
+open index.html
+```
+
+Or just double-click `index.html` in Finder.
 
 ---
 
 ## Tech Stack
 
-- **HTML5** — semantic markup
-- **CSS3** — custom properties, CSS Grid, Flexbox, media queries
-- **Vanilla JavaScript** — no libraries or frameworks
+| Layer | Technology |
+|-------|-----------|
+| Markup | HTML5 (semantic) |
+| Styles | CSS3 — custom properties, Grid, Flexbox, `@keyframes` |
+| Logic | Vanilla JavaScript (ES2020) — no frameworks |
+| Charts | [Chart.js 4.4.3](https://www.chartjs.org/) via CDN |
+| Storage | `localStorage` — all data persisted client-side |
+| Hosting | GitHub Pages |
 
 ---
 
 ## Notes for Developers
 
-- **No backend** — this is a fully static front-end demo. Auth is simulated client-side.
-- **Adding real auth** — replace `handleLogin()` and `handleSignup()` with API calls and store the session token.
-- **Adding real data** — replace the hardcoded table rows and alert items with `fetch()` calls to your API and render them dynamically.
-- **Chart library** — the bar chart is a lightweight custom implementation. Swap `buildChart()` with Chart.js or similar if you need more chart types.
+- **No backend** — auth, data, and sessions are entirely client-side. Do not use in production without a real backend.
+- **Adding real auth** — replace `handleLogin()` / `handleSignup()` with API calls and store a JWT or session token server-side.
+- **Adding real data** — replace `Store.get()` seed reads with `fetch()` calls to your REST or GraphQL API.
+- **Extending pages** — add an entry to `PAGE_MAP` in `app.js` and a matching `render*()` function; the router picks it up automatically.
+- **Avatar persistence** — avatar preferences are stored under `fg-profile-{email}` so they survive re-login and are independent of credentials.
