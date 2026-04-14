@@ -33,7 +33,6 @@
       <a href="#pricing"       data-i18n="nav_pricing">Pricing</a>
     </div>
     <div class="nav-actions">
-      <!-- Language switcher -->
       <div class="lang-switcher">
         <button class="lang-btn active" data-lang="en">EN</button>
         <button class="lang-btn"        data-lang="fa">FA</button>
@@ -41,16 +40,36 @@
       <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
       <a href="app.html" class="btn-ghost"   data-i18n="nav_signin">Sign In</a>
       <a href="app.html" class="btn-primary" data-i18n="nav_getstarted">Get Started Free</a>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </div>
 </nav>
+
+<!-- ══════════════ MOBILE NAV ══════════════ -->
+<div class="mobile-nav" id="mobileNav">
+  <div class="mobile-nav-links">
+    <a href="#features"     data-i18n="nav_features">Features</a>
+    <a href="#how-it-works" data-i18n="nav_howitworks">How it works</a>
+    <a href="#testimonials" data-i18n="nav_testimonials">Testimonials</a>
+    <a href="#pricing"      data-i18n="nav_pricing">Pricing</a>
+  </div>
+  <div class="mobile-nav-actions">
+    <a href="app.html" class="btn-ghost"   data-i18n="nav_signin">Sign In</a>
+    <a href="app.html" class="btn-primary" data-i18n="nav_getstarted">Get Started Free</a>
+  </div>
+</div>
 
 <!-- ══════════════ HERO ══════════════ -->
 <section class="hero">
   <div class="hero-inner">
     <div class="hero-text">
       <div class="hero-badge" data-i18n="hero_badge">🚀 Trusted by 500+ Forex brokers worldwide</div>
-      <h1><span data-i18n="hero_h1_line1">Risk management</span><br /><span class="gradient-text" data-i18n="hero_h1_line2">built for Forex</span></h1>
+      <h1>
+        <span data-i18n="hero_h1_line1">Risk management</span><br />
+        <span class="gradient-text" data-i18n="hero_h1_line2">built for Forex</span>
+      </h1>
       <p data-i18n="hero_desc">Stop juggling spreadsheets and email chains. ForexGuard gives your compliance team a single command centre for account statements, risk alerts, KYC reviews, and client support.</p>
       <div class="hero-ctas">
         <a href="app.html" class="btn-primary btn-lg" data-i18n="hero_cta_primary">Get Started Free</a>
@@ -64,14 +83,17 @@
     </div>
 
     <div class="hero-mockup">
+      <!-- Feature tabs -->
+      <div class="mockup-tabs">
+        <button class="mockup-tab active" data-tab="dashboard" data-i18n="tab_dashboard">Dashboard</button>
+        <button class="mockup-tab"        data-tab="alerts"    data-i18n="tab_alerts">Risk Alerts</button>
+        <button class="mockup-tab"        data-tab="kyc"       data-i18n="tab_kyc">KYC Reviews</button>
+      </div>
       <div class="browser-chrome">
-        <div class="browser-dots">
-          <span></span><span></span><span></span>
-        </div>
+        <div class="browser-dots"><span></span><span></span><span></span></div>
         <div class="browser-bar">app.forexguard.com/dashboard</div>
       </div>
       <div class="mockup-body">
-        <!-- Mini sidebar -->
         <div class="mockup-sidebar">
           <div class="mockup-logo">🛡️</div>
           <div class="mockup-nav-item active"></div>
@@ -80,8 +102,9 @@
           <div class="mockup-nav-item"></div>
           <div class="mockup-nav-item"></div>
         </div>
-        <!-- Mini content -->
-        <div class="mockup-content">
+
+        <!-- Screen: Dashboard -->
+        <div class="mockup-content" id="mockup-dashboard">
           <div class="mockup-topbar">
             <div class="mockup-title"></div>
             <div class="mockup-avatar"></div>
@@ -108,11 +131,69 @@
             </div>
           </div>
         </div>
+
+        <!-- Screen: Risk Alerts -->
+        <div class="mockup-content" id="mockup-alerts" style="display:none">
+          <div class="mockup-topbar">
+            <div class="mockup-title"></div>
+            <div class="mockup-avatar"></div>
+          </div>
+          <div class="mockup-stats">
+            <div class="mockup-stat red"></div>
+            <div class="mockup-stat red"></div>
+            <div class="mockup-stat amber"></div>
+            <div class="mockup-stat amber"></div>
+          </div>
+          <div class="mockup-alerts-full">
+            <div class="mockup-alert-row red-a"></div>
+            <div class="mockup-alert-row red-a"></div>
+            <div class="mockup-alert-row amber-a"></div>
+            <div class="mockup-alert-row amber-a"></div>
+            <div class="mockup-alert-row blue-a"></div>
+            <div class="mockup-alert-row blue-a"></div>
+          </div>
+        </div>
+
+        <!-- Screen: KYC Reviews -->
+        <div class="mockup-content" id="mockup-kyc" style="display:none">
+          <div class="mockup-topbar">
+            <div class="mockup-title"></div>
+            <div class="mockup-avatar"></div>
+          </div>
+          <div class="mockup-stats">
+            <div class="mockup-stat green"></div>
+            <div class="mockup-stat amber"></div>
+            <div class="mockup-stat red"></div>
+            <div class="mockup-stat blue"></div>
+          </div>
+          <div class="mockup-kyc-list">
+            <div class="mockup-kyc-row"><div class="mockup-kyc-name"></div><div class="mockup-kyc-badge green-b"></div></div>
+            <div class="mockup-kyc-row"><div class="mockup-kyc-name"></div><div class="mockup-kyc-badge green-b"></div></div>
+            <div class="mockup-kyc-row"><div class="mockup-kyc-name"></div><div class="mockup-kyc-badge amber-b"></div></div>
+            <div class="mockup-kyc-row"><div class="mockup-kyc-name"></div><div class="mockup-kyc-badge red-b"></div></div>
+            <div class="mockup-kyc-row"><div class="mockup-kyc-name"></div><div class="mockup-kyc-badge green-b"></div></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
-
   <div class="hero-gradient"></div>
+</section>
+
+<!-- ══════════════ LOGOS BAR ══════════════ -->
+<section class="logos-bar">
+  <div class="container">
+    <p class="logos-title" data-i18n="logos_title">Trusted by leading brokers worldwide</p>
+    <div class="logos-grid">
+      <div class="logo-pill reveal">Meridian <strong>FX</strong></div>
+      <div class="logo-pill reveal">Atlas <strong>Capital</strong></div>
+      <div class="logo-pill reveal">Nord<strong>Broker</strong></div>
+      <div class="logo-pill reveal">Prime<strong>FX</strong></div>
+      <div class="logo-pill reveal">Apex <strong>Markets</strong></div>
+      <div class="logo-pill reveal">Trade<strong>Core</strong></div>
+    </div>
+  </div>
 </section>
 
 <!-- ══════════════ STATS BAR ══════════════ -->
@@ -120,22 +201,30 @@
   <div class="container">
     <div class="stats-grid">
       <div class="stat-item">
-        <div class="stat-number">500<span>+</span></div>
+        <div class="stat-number">
+          <span class="stat-count" data-target="500" data-decimals="0">0</span><span class="stat-suffix">+</span>
+        </div>
         <div class="stat-desc" data-i18n="stat_1_desc">Brokers worldwide</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <div class="stat-number">2.4<span>M</span></div>
+        <div class="stat-number">
+          <span class="stat-count" data-target="2.4" data-decimals="1">0</span><span class="stat-suffix">M</span>
+        </div>
         <div class="stat-desc" data-i18n="stat_2_desc">Accounts monitored</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <div class="stat-number">99.9<span>%</span></div>
+        <div class="stat-number">
+          <span class="stat-count" data-target="99.9" data-decimals="1">0</span><span class="stat-suffix">%</span>
+        </div>
         <div class="stat-desc" data-i18n="stat_3_desc">Uptime SLA</div>
       </div>
       <div class="stat-divider"></div>
       <div class="stat-item">
-        <div class="stat-number">$8<span>B+</span></div>
+        <div class="stat-number">
+          <span class="stat-prefix">$</span><span class="stat-count" data-target="8" data-decimals="0">0</span><span class="stat-suffix">B+</span>
+        </div>
         <div class="stat-desc" data-i18n="stat_4_desc">Exposure managed daily</div>
       </div>
     </div>
@@ -145,38 +234,38 @@
 <!-- ══════════════ FEATURES ══════════════ -->
 <section class="features" id="features">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-badge" data-i18n="feat_badge">Features</div>
       <h2 data-i18n="feat_h2">Everything your compliance team needs</h2>
       <p data-i18n="feat_sub">Purpose-built tools that map directly to your daily workflows — no configuration overhead.</p>
     </div>
     <div class="features-grid">
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon" style="background: rgba(239,68,68,.12); color: #ef4444;">⚠️</div>
         <h3 data-i18n="feat1_title">Risk Alerts</h3>
         <p data-i18n="feat1_desc">Real-time alerts for abnormal withdrawal patterns, margin call risks, and repeat account detection. Never miss a critical event.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon" style="background: rgba(245,158,11,.12); color: #f59e0b;">📋</div>
         <h3 data-i18n="feat2_title">Account Statements</h3>
         <p data-i18n="feat2_desc">Review, flag, and approve pending client statements in a structured queue. Full audit trail included.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon" style="background: rgba(34,197,94,.12); color: #22c55e;">✅</div>
         <h3 data-i18n="feat3_title">KYC Reviews</h3>
         <p data-i18n="feat3_desc">Track document expiry dates, flag incomplete submissions, and manage renewals before they become compliance issues.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon" style="background: rgba(99,102,241,.12); color: #818cf8;">🔄</div>
         <h3 data-i18n="feat4_title">Repeat Account Detection</h3>
         <p data-i18n="feat4_desc">Identify clients opening duplicate accounts using device fingerprinting and history matching. Approve or deny in one click.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon" style="background: rgba(59,130,246,.12); color: #3b82f6;">📧</div>
         <h3 data-i18n="feat5_title">Support Inbox</h3>
         <p data-i18n="feat5_desc">Manage client support emails directly inside the portal. No more switching between tools — your team works in one place.</p>
       </div>
-      <div class="feature-card">
+      <div class="feature-card reveal">
         <div class="feature-icon" style="background: rgba(16,185,129,.12); color: #10b981;">📊</div>
         <h3 data-i18n="feat6_title">Exposure Reports</h3>
         <p data-i18n="feat6_desc">Generate PDF risk reports, track resolved cases over time, and export data for regulatory submissions.</p>
@@ -188,27 +277,27 @@
 <!-- ══════════════ HOW IT WORKS ══════════════ -->
 <section class="how-it-works" id="how-it-works">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-badge" data-i18n="hiw_badge">How it works</div>
       <h2 data-i18n="hiw_h2">Up and running in minutes</h2>
       <p data-i18n="hiw_sub">No lengthy onboarding. No dedicated IT team required.</p>
     </div>
     <div class="steps-grid">
-      <div class="step-card">
+      <div class="step-card reveal">
         <div class="step-number">01</div>
         <div class="step-icon">🔗</div>
         <h3 data-i18n="step1_title">Connect your accounts</h3>
         <p data-i18n="step1_desc">Link your brokerage platform via API or upload account data directly. ForexGuard ingests client and transaction data automatically.</p>
       </div>
       <div class="step-connector"></div>
-      <div class="step-card">
+      <div class="step-card reveal">
         <div class="step-number">02</div>
         <div class="step-icon">⚙️</div>
         <h3 data-i18n="step2_title">Set your risk thresholds</h3>
         <p data-i18n="step2_desc">Configure alert rules — withdrawal limits, margin ratios, KYC expiry windows — to match your internal compliance policy.</p>
       </div>
       <div class="step-connector"></div>
-      <div class="step-card">
+      <div class="step-card reveal">
         <div class="step-number">03</div>
         <div class="step-icon">🔔</div>
         <h3 data-i18n="step3_title">Get alerted instantly</h3>
@@ -221,12 +310,12 @@
 <!-- ══════════════ TESTIMONIALS ══════════════ -->
 <section class="testimonials" id="testimonials">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-badge" data-i18n="testi_badge">Testimonials</div>
       <h2 data-i18n="testi_h2">Trusted by compliance teams globally</h2>
     </div>
     <div class="testimonials-grid">
-      <div class="testimonial-card">
+      <div class="testimonial-card reveal">
         <div class="stars">★★★★★</div>
         <p data-i18n="testi1_quote">"ForexGuard cut our KYC review time by 60%. Everything that used to live across three spreadsheets and an email inbox is now in one place. Our auditors love the trail it leaves."</p>
         <div class="testimonial-author">
@@ -237,7 +326,7 @@
           </div>
         </div>
       </div>
-      <div class="testimonial-card featured">
+      <div class="testimonial-card featured reveal">
         <div class="stars">★★★★★</div>
         <p data-i18n="testi2_quote">"We went from finding out about repeat accounts days later to catching them in real time. The device fingerprinting alone has saved us from dozens of policy breaches this quarter."</p>
         <div class="testimonial-author">
@@ -248,7 +337,7 @@
           </div>
         </div>
       </div>
-      <div class="testimonial-card">
+      <div class="testimonial-card reveal">
         <div class="stars">★★★★★</div>
         <p data-i18n="testi3_quote">"The dashboard is clean and fast. My team of 12 agents manages over 40,000 active accounts with it. The alert system means we're proactive instead of reactive for the first time."</p>
         <div class="testimonial-author">
@@ -266,27 +355,27 @@
 <!-- ══════════════ PRICING ══════════════ -->
 <section class="pricing" id="pricing">
   <div class="container">
-    <div class="section-header">
+    <div class="section-header reveal">
       <div class="section-badge" data-i18n="price_badge">Pricing</div>
       <h2 data-i18n="price_h2">Simple, transparent pricing</h2>
       <p data-i18n="price_sub">No hidden fees. Scale as your team grows.</p>
     </div>
     <div class="pricing-grid">
-      <div class="pricing-card">
+      <div class="pricing-card reveal">
         <div class="plan-name"  data-i18n="plan1_name">Starter</div>
         <div class="plan-price"><span data-i18n="plan1_price">$0</span><span data-i18n="plan1_period">/mo</span></div>
         <div class="plan-desc"  data-i18n="plan1_desc">For small brokers getting started with risk management.</div>
         <ul class="plan-features">
-          <li                   data-i18n="plan1_f1">✓ Up to 500 active accounts</li>
-          <li                   data-i18n="plan1_f2">✓ Risk alerts dashboard</li>
-          <li                   data-i18n="plan1_f3">✓ Account statements queue</li>
-          <li                   data-i18n="plan1_f4">✓ 1 agent seat</li>
-          <li class="muted"     data-i18n="plan1_f5">✗ KYC tracking</li>
-          <li class="muted"     data-i18n="plan1_f6">✗ Exposure reports</li>
+          <li data-i18n="plan1_f1">✓ Up to 500 active accounts</li>
+          <li data-i18n="plan1_f2">✓ Risk alerts dashboard</li>
+          <li data-i18n="plan1_f3">✓ Account statements queue</li>
+          <li data-i18n="plan1_f4">✓ 1 agent seat</li>
+          <li class="muted" data-i18n="plan1_f5">✗ KYC tracking</li>
+          <li class="muted" data-i18n="plan1_f6">✗ Exposure reports</li>
         </ul>
         <a href="app.html" class="btn-outline btn-full" data-i18n="plan1_cta">Get Started Free</a>
       </div>
-      <div class="pricing-card featured">
+      <div class="pricing-card featured reveal">
         <div class="plan-badge" data-i18n="plan2_badge">Most Popular</div>
         <div class="plan-name"  data-i18n="plan2_name">Professional</div>
         <div class="plan-price"><span data-i18n="plan2_price">$149</span><span data-i18n="plan2_period">/mo</span></div>
@@ -301,7 +390,7 @@
         </ul>
         <a href="app.html" class="btn-primary btn-full" data-i18n="plan2_cta">Start Free Trial</a>
       </div>
-      <div class="pricing-card">
+      <div class="pricing-card reveal">
         <div class="plan-name"  data-i18n="plan3_name">Enterprise</div>
         <div class="plan-price"><span data-i18n="plan3_price">Custom</span></div>
         <div class="plan-desc"  data-i18n="plan3_desc">For large brokers with custom compliance and data requirements.</div>
@@ -319,10 +408,64 @@
   </div>
 </section>
 
+<!-- ══════════════ FAQ ══════════════ -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-badge" data-i18n="faq_badge">FAQ</div>
+      <h2 data-i18n="faq_h2">Frequently asked questions</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          <span data-i18n="faq_1_q">Is my data secure?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer"><p data-i18n="faq_1_a">All data is stored in your browser's localStorage — nothing is sent to external servers. ForexGuard runs entirely client-side, so your compliance data never leaves your device.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          <span data-i18n="faq_2_q">Can I use it completely for free?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer"><p data-i18n="faq_2_a">Yes. The Starter plan is completely free with up to 500 active accounts and core risk management tools. No credit card required, no time limit.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          <span data-i18n="faq_3_q">Do I need IT support to set it up?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer"><p data-i18n="faq_3_a">No. ForexGuard runs in any modern browser with zero installation or configuration. Most teams are up and running in under 5 minutes.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          <span data-i18n="faq_4_q">How many agents can use the dashboard?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer"><p data-i18n="faq_4_a">The Starter plan includes 1 agent seat. Professional supports up to 10 agents. Enterprise offers unlimited seats with role-based access control.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          <span data-i18n="faq_5_q">What happens when I reach the free plan limit?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer"><p data-i18n="faq_5_a">You'll receive an in-app notification when approaching 500 accounts. Upgrading to Professional unlocks unlimited accounts and all advanced features instantly.</p></div>
+      </div>
+      <div class="faq-item reveal">
+        <button class="faq-question">
+          <span data-i18n="faq_6_q">Is ForexGuard GDPR compliant?</span>
+          <span class="faq-icon">+</span>
+        </button>
+        <div class="faq-answer"><p data-i18n="faq_6_a">Yes. Since all data remains in your browser and is never transmitted to third-party servers, ForexGuard inherently satisfies GDPR data residency and privacy requirements.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ══════════════ CTA BANNER ══════════════ -->
 <section class="cta-banner">
   <div class="container">
-    <div class="cta-inner">
+    <div class="cta-inner reveal">
       <h2 data-i18n="cta_h2">Start managing risk today</h2>
       <p data-i18n="cta_sub">Join 500+ brokers who use ForexGuard to stay ahead of compliance failures.</p>
       <div class="cta-actions">
@@ -371,34 +514,152 @@
     <div class="footer-bottom">
       <div data-i18n="footer_copy">© 2026 ForexGuard. All rights reserved.</div>
       <div class="footer-bottom-links">
-        <a href="#"                                        data-i18n="footer_status">Status</a>
-        <a href="#"                                        data-i18n="footer_security">Security</a>
-        <a href="https://github.com/ARSHSSSS/My-Dashboard" data-i18n="footer_github">GitHub</a>
+        <a href="#"                                         data-i18n="footer_status">Status</a>
+        <a href="#"                                         data-i18n="footer_security">Security</a>
+        <a href="https://github.com/ARSHSSSS/My-Dashboard"  data-i18n="footer_github">GitHub</a>
       </div>
     </div>
   </div>
 </footer>
 
+<!-- ══════════════ COOKIE BANNER ══════════════ -->
+<div class="cookie-banner" id="cookieBanner">
+  <span data-i18n="cookie_text">🍪 We use localStorage to save your theme and preferences only — no tracking, no third-party cookies.</span>
+  <button class="cookie-accept" id="cookieAccept" data-i18n="cookie_accept">Got it</button>
+</div>
+
 <script src="js/i18n.js"></script>
 <script>
-  /* Theme toggle */
+/* ── Theme toggle ─────────────────────────────── */
+(function () {
   const root   = document.documentElement;
   const toggle = document.getElementById('themeToggle');
   const saved  = localStorage.getItem('fg-theme') || 'dark';
   root.setAttribute('data-theme', saved);
   toggle.textContent = saved === 'dark' ? '🌙' : '☀️';
-
   toggle.addEventListener('click', () => {
     const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
     toggle.textContent = next === 'dark' ? '🌙' : '☀️';
     localStorage.setItem('fg-theme', next);
   });
+})();
 
-  /* Navbar scroll shadow */
-  window.addEventListener('scroll', () => {
-    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+/* ── Navbar scroll + glassmorphism ────────────── */
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+/* ── Animated stat counters ───────────────────── */
+function animateCounter(el) {
+  const target   = parseFloat(el.dataset.target);
+  const decimals = parseInt(el.dataset.decimals || '0');
+  const duration = 1800;
+  const startTs  = performance.now();
+  el.dataset.animated = 'true';
+
+  function tick(now) {
+    const p      = Math.min((now - startTs) / duration, 1);
+    const eased  = 1 - Math.pow(1 - p, 3);
+    const val    = (eased * target).toFixed(decimals);
+    el.dataset.current = val;                                  /* for lang-switch re-render */
+    el.textContent = getCurrentLang() === 'fa' ? toFarsiDigits(val) : val;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function initCounters() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting && !e.target.dataset.animated) {
+        animateCounter(e.target);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stat-count').forEach(c => obs.observe(c));
+}
+
+/* ── Scroll reveal ────────────────────────────── */
+function initReveal() {
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('.reveal').forEach(el => {
+    /* Auto-stagger siblings inside the same grid/flex parent */
+    const siblings = [...el.parentElement.children].filter(c => c.classList.contains('reveal'));
+    const idx = siblings.indexOf(el);
+    if (idx > 0) el.style.transitionDelay = (idx * 0.1) + 's';
+    obs.observe(el);
   });
+}
+
+/* ── Mockup feature tabs ──────────────────────── */
+function initMockupTabs() {
+  document.querySelectorAll('.mockup-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.mockup-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const target = tab.dataset.tab;
+      ['dashboard', 'alerts', 'kyc'].forEach(name => {
+        const el = document.getElementById('mockup-' + name);
+        if (el) el.style.display = name === target ? 'flex' : 'none';
+      });
+    });
+  });
+}
+
+/* ── FAQ accordion ────────────────────────────── */
+function initFaq() {
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item   = btn.closest('.faq-item');
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+}
+
+/* ── Hamburger / mobile nav ───────────────────── */
+function initHamburger() {
+  const btn = document.getElementById('hamburger');
+  const nav = document.getElementById('mobileNav');
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('open');
+    nav.classList.toggle('open');
+  });
+  nav.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      btn.classList.remove('open');
+      nav.classList.remove('open');
+    });
+  });
+}
+
+/* ── Cookie banner ────────────────────────────── */
+function initCookie() {
+  const banner = document.getElementById('cookieBanner');
+  if (localStorage.getItem('fg-cookie-ok')) { banner.style.display = 'none'; return; }
+  document.getElementById('cookieAccept').addEventListener('click', () => {
+    localStorage.setItem('fg-cookie-ok', '1');
+    banner.classList.add('hidden');
+  });
+}
+
+/* ── Boot ─────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  initCounters();
+  initReveal();
+  initMockupTabs();
+  initFaq();
+  initHamburger();
+  initCookie();
+});
 </script>
 </body>
 </html>
