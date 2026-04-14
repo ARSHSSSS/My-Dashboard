@@ -458,7 +458,11 @@ button { cursor: pointer; border: none; outline: none; }
   top: 0; left: 0;
   height: 100vh;
   z-index: 10;
-  transition: background 0.3s, border-color 0.3s;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s ease, box-shadow 0.3s;
+}
+.sidebar.collapsed {
+  transform: translateX(-100%);
+  box-shadow: none;
 }
 .sidebar-logo {
   display: flex;
@@ -531,6 +535,26 @@ button { cursor: pointer; border: none; outline: none; }
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+.main-wrap.sidebar-collapsed {
+  margin-left: 0;
+}
+
+/* Sidebar overlay (mobile / collapsed backdrop) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+  z-index: 9;
+  animation: overlay-in .25s ease;
+}
+.sidebar-overlay.visible { display: block; }
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* Header */
@@ -547,8 +571,36 @@ button { cursor: pointer; border: none; outline: none; }
   z-index: 9;
   transition: background 0.3s, border-color 0.3s;
 }
-.topbar-title { font-size: 16px; font-weight: 600; flex: 1; }
+.topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+.topbar-title { font-size: 16px; font-weight: 600; }
 .topbar-title span { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
+
+/* Sidebar toggle button */
+.sidebar-toggle {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 8px;
+  flex-shrink: 0;
+  transition: background .15s, border-color .15s;
+}
+.sidebar-toggle:hover { background: var(--surface2); border-color: var(--border); }
+.sidebar-toggle span {
+  display: block;
+  height: 2px;
+  background: var(--muted);
+  border-radius: 2px;
+  transition: transform .3s ease, opacity .3s ease, width .3s ease;
+}
+.sidebar-toggle span:nth-child(1) { width: 18px; }
+.sidebar-toggle span:nth-child(2) { width: 14px; align-self: flex-start; }
+.sidebar-toggle span:nth-child(3) { width: 10px; align-self: flex-start; }
+.sidebar-toggle:hover span { background: var(--text); }
 
 .topbar-actions { display: flex; align-items: center; gap: 14px; position: relative; }
 .topbar-icon-btn {

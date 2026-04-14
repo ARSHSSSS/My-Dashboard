@@ -212,7 +212,12 @@
   <div class="main-wrap">
     <!-- Topbar -->
     <header class="topbar">
-      <div class="topbar-title" id="topbarTitle">Overview</div>
+      <div class="topbar-left">
+        <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title" id="topbarTitle">Overview</div>
+      </div>
       <div class="topbar-actions">
         <div class="topbar-icon-btn" id="searchBtn" title="Search">🔍</div>
         <div class="topbar-icon-btn" id="notifBtn" title="Notifications" style="position:relative;">
@@ -240,6 +245,9 @@
       </div>
     </header>
 
+    <!-- Sidebar overlay (click to close) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Notifications panel -->
     <div id="notifPanel" class="notif-panel">
       <div class="notif-header">
@@ -257,5 +265,43 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="js/data.js?v=10"></script>
 <script src="js/app.js?v=10"></script>
+<script>
+/* ── Collapsible Sidebar ─────────────────────── */
+(function () {
+  const sidebar  = document.querySelector('.sidebar');
+  const mainWrap = document.querySelector('.main-wrap');
+  const overlay  = document.getElementById('sidebarOverlay');
+  const btn      = document.getElementById('sidebarToggle');
+  if (!sidebar || !btn) return;
+
+  function setCollapsed(collapsed) {
+    sidebar.classList.toggle('collapsed', collapsed);
+    mainWrap.classList.toggle('sidebar-collapsed', collapsed);
+    overlay.classList.toggle('visible', !collapsed && window.innerWidth < 900);
+    localStorage.setItem('fg-sidebar-collapsed', collapsed ? '1' : '0');
+  }
+
+  /* Restore saved state */
+  if (localStorage.getItem('fg-sidebar-collapsed') === '1') {
+    sidebar.classList.add('collapsed');
+    mainWrap.classList.add('sidebar-collapsed');
+  }
+
+  btn.addEventListener('click', () => {
+    const isNowCollapsed = !sidebar.classList.contains('collapsed');
+    setCollapsed(isNowCollapsed);
+  });
+
+  /* Close sidebar when overlay is clicked */
+  overlay.addEventListener('click', () => setCollapsed(true));
+
+  /* On mobile, auto-collapse sidebar and show overlay when a nav link is clicked */
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth < 900) setCollapsed(true);
+    });
+  });
+})();
+</script>
 </body>
 </html>
