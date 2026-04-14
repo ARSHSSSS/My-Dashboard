@@ -93,7 +93,8 @@ function updateChartTheme() {
 
 /* ── Notifications panel ────────────────────────── */
 function renderNotifications() {
-  const alerts  = Store.get('alerts').filter(a => a.status === 'active').slice(0, 5);
+  /* notifDismissed = hidden from bell panel (alert still active on Risk page) */
+  const alerts  = Store.get('alerts').filter(a => a.status === 'active' && !a.notifDismissed).slice(0, 5);
   const emails  = Store.get('emails').filter(e => !e.read).slice(0, 3);
   const total   = alerts.length + emails.length;
   const dot     = document.querySelector('.notif-dot');
@@ -103,7 +104,7 @@ function renderNotifications() {
   if (!list) return;
   list.innerHTML = [
     ...alerts.map(a => `
-      <div class="notif-item" data-page="risk-alerts">
+      <div class="notif-item" data-page="risk-alerts" data-notif-type="alert" data-notif-id="${a.id}">
         <div class="notif-item-icon ${a.severity}">${a.icon}</div>
         <div class="notif-item-body">
           <div class="notif-item-title">${a.title}</div>
@@ -111,7 +112,7 @@ function renderNotifications() {
         </div>
       </div>`),
     ...emails.map(e => `
-      <div class="notif-item" data-page="support-emails">
+      <div class="notif-item" data-page="support-emails" data-notif-type="email" data-notif-id="${e.id}">
         <div class="notif-item-icon blue">📧</div>
         <div class="notif-item-body">
           <div class="notif-item-title">${e.subject}</div>
@@ -1356,11 +1357,33 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ── Notifications panel items ── */
   document.getElementById('notifPanel').addEventListener('click', e => {
     const panel = document.getElementById('notifPanel');
-    const item  = e.target.closest('[data-page]');
-    if (item) { panel.classList.remove('open'); navigate(item.dataset.page); return; }
+
+    /* ── Clear All ── */
     if (e.target.id === 'clearNotifs') {
+      Store.get('alerts').filter(a => a.status === 'active').forEach(a =>
+        Store.update('alerts', a.id, { notifDismissed: true })
+      );
+      Store.get('emails').filter(em => !em.read).forEach(em =>
+        Store.update('emails', em.id, { read: true })
+      );
+      renderNotifications();
+      updateSidebarBadges();
       panel.classList.remove('open');
-      showToast('Notifications cleared.', 'info');
+      showToast('All notifications cleared.', 'info');
+      return;
+    }
+
+    /* ── Click a single notification ── */
+    const item = e.target.closest('[data-page]');
+    if (item) {
+      const { notifType, notifId, page } = item.dataset;
+      if (notifType === 'alert') Store.update('alerts', notifId, { notifDismissed: true });
+      if (notifType === 'email') Store.update('emails', notifId, { read: true });
+      renderNotifications();
+      updateSidebarBadges();
+      panel.classList.remove('open');
+      navigate(page);
+      return;
     }
   });
 
