@@ -137,14 +137,39 @@ function showScreen(name) {
 }
 
 /* ── Auth ───────────────────────────────────────── */
+/* ── Demo / built-in credentials ──────────────────── */
+const DEMO_ACCOUNT = { name: 'Demo Agent', email: 'demo@forexguard.com', password: 'Demo@2026' };
+
 function handleLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass  = document.getElementById('loginPassword').value;
   const err   = document.getElementById('loginError');
-  if (!email || !pass) { err.classList.add('show'); return; }
+
+  if (!email || !pass) {
+    err.textContent = 'Please enter your email and password.';
+    err.classList.add('show'); return;
+  }
+
+  /* Check demo account */
+  let matchedUser = null;
+  if (email === DEMO_ACCOUNT.email && pass === DEMO_ACCOUNT.password) {
+    matchedUser = { name: DEMO_ACCOUNT.name, email: DEMO_ACCOUNT.email };
+  }
+
+  /* Check registered accounts */
+  if (!matchedUser) {
+    const accounts = JSON.parse(localStorage.getItem('fg-accounts') || '[]');
+    const found = accounts.find(a => a.email.toLowerCase() === email && a.password === pass);
+    if (found) matchedUser = { name: found.name, email: found.email };
+  }
+
+  if (!matchedUser) {
+    err.textContent = 'Invalid email or password. Try the demo account below.';
+    err.classList.add('show'); return;
+  }
+
   err.classList.remove('show');
-  const namePart = email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-  currentUser = { name: namePart, email };
+  currentUser = matchedUser;
   localStorage.setItem('fg-user', JSON.stringify(currentUser));
   Store.addAudit('Login', currentUser.name, 'Signed in via email/password');
   initDashboard();
@@ -154,10 +179,29 @@ function handleLogin() {
 
 function handleSignup() {
   const name  = document.getElementById('signupName').value.trim();
-  const email = document.getElementById('signupEmail').value.trim();
+  const email = document.getElementById('signupEmail').value.trim().toLowerCase();
   const pass  = document.getElementById('signupPassword').value;
   const err   = document.getElementById('signupError');
-  if (!name || !email || !pass) { err.classList.add('show'); return; }
+
+  if (!name || !email || !pass) {
+    err.textContent = 'Please fill in all fields.';
+    err.classList.add('show'); return;
+  }
+  if (pass.length < 6) {
+    err.textContent = 'Password must be at least 6 characters.';
+    err.classList.add('show'); return;
+  }
+
+  /* Prevent duplicate emails */
+  const accounts = JSON.parse(localStorage.getItem('fg-accounts') || '[]');
+  if (email === DEMO_ACCOUNT.email || accounts.find(a => a.email.toLowerCase() === email)) {
+    err.textContent = 'An account with this email already exists.';
+    err.classList.add('show'); return;
+  }
+
+  accounts.push({ name, email, password: pass });
+  localStorage.setItem('fg-accounts', JSON.stringify(accounts));
+
   err.classList.remove('show');
   currentUser = { name, email };
   localStorage.setItem('fg-user', JSON.stringify(currentUser));
@@ -1038,17 +1082,10 @@ function openNewTicketModal() {
    ════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ── Init theme & session ── */
+  /* ── Init theme — always start at login ── */
   applyTheme(localStorage.getItem('fg-theme') || 'dark');
-  const saved = localStorage.getItem('fg-user');
-  if (saved) {
-    currentUser = JSON.parse(saved);
-    initDashboard();
-    showScreen('dashboard');
-    navigate('dashboard');
-  } else {
-    showScreen('login');
-  }
+  localStorage.removeItem('fg-user'); // always require fresh sign-in on page load
+  showScreen('login');
 
   /* ── Auth ── */
   document.getElementById('loginBtn').addEventListener('click', handleLogin);
