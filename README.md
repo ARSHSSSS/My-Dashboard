@@ -10,9 +10,9 @@ A fully functional, client-side single-page application (SPA) for Forex risk man
 
 | Screen | URL |
 |--------|-----|
-| Landing page | `/landing.html` |
-| Login / Sign Up | `/index.html` |
-| Dashboard (all 12 pages) | `/index.html` (after login) |
+| Home (landing page) | `/` or `/index.html` |
+| Login / Sign Up | `/app.html` |
+| Dashboard (all 12 pages) | `/app.html` (after login) |
 
 **Demo credentials:** `demo@forexguard.com` / `Demo@2026`
 
@@ -22,8 +22,8 @@ A fully functional, client-side single-page application (SPA) for Forex risk man
 
 ```
 My-Dashboard/
-├── index.html          # SPA shell — all screens, sidebar, topbar, modal
-├── landing.html        # Marketing landing page
+├── index.html          # Home — marketing landing page (GitHub Pages default)
+├── app.html            # SPA shell — all screens, sidebar, topbar, modal
 ├── css/
 │   ├── styles.css      # Dashboard styles (layout, components, theming)
 │   └── landing.css     # Landing page styles
@@ -185,7 +185,7 @@ No installation or build step required.
 ```bash
 git clone https://github.com/ARSHSSSS/My-Dashboard.git
 cd My-Dashboard
-open index.html
+open index.html   # opens the landing page
 ```
 
 Or just double-click `index.html` in Finder.
