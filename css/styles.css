@@ -221,6 +221,7 @@ button { cursor: pointer; border: none; outline: none; }
 
 /* Main area */
 .main-wrap {
+  position: relative;
   margin-left: var(--sidebar-w);
   flex: 1;
   display: flex;

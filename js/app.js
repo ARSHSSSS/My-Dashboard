@@ -184,11 +184,7 @@ function initDashboard() {
   const initials = currentUser.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
   document.getElementById('userAvatar').textContent = initials;
   document.getElementById('userName').textContent   = currentUser.name;
-  const h = new Date().getHours();
-  document.getElementById('greetName').textContent  = currentUser.name.split(' ')[0];
-  document.getElementById('greeting').textContent   = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
-  document.getElementById('dateLabel').textContent  =
-    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  // greetName, greeting, dateLabel live inside #mainContent — set after render in afterRender()
   renderNotifications();
 }
 
@@ -1085,9 +1081,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ── Notifications panel items ── */
   document.getElementById('notifPanel').addEventListener('click', e => {
-    const item = e.target.closest('[data-page]');
-    if (item) { panel.classList.remove('open'); navigate(item.dataset.page); }
     const panel = document.getElementById('notifPanel');
+    const item  = e.target.closest('[data-page]');
+    if (item) { panel.classList.remove('open'); navigate(item.dataset.page); return; }
     if (e.target.id === 'clearNotifs') {
       panel.classList.remove('open');
       showToast('Notifications cleared.', 'info');
@@ -1111,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
      MAIN CONTENT EVENT DELEGATION
      ══════════════════════════════════════ */
   document.getElementById('mainContent').addEventListener('click', e => {
-    const btn = e.target.closest('[data-action]');
+    const btn = e.target.closest('[data-action], [data-nav-btn], [data-nav-card]');
     if (!btn) return;
     const { action, id, filter, page, close, key, theme } = btn.dataset;
 
