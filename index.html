@@ -1,12 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ForexGuard — A risk management portal for Forex agents. Monitor account statements, risk alerts, repeat requests, and support emails in one dashboard." />
+  <meta property="og:title" content="ForexGuard — Risk Management Portal" />
+  <meta property="og:description" content="Monitor account statements, risk alerts, repeat requests, and support emails in one dashboard." />
+  <meta property="og:type" content="website" />
   <title>ForexGuard — Risk Management Portal</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+
+<!-- ══════════════ TOAST ══════════════ -->
+<div id="toastContainer"></div>
+
+<!-- ══════════════ SEARCH OVERLAY ══════════════ -->
+<div id="searchOverlay">
+  <div id="searchBox">
+    <input type="text" id="searchInput" placeholder="Search clients, accounts, alerts…" autocomplete="off" />
+    <span id="searchClose">✕</span>
+  </div>
+</div>
 
 <!-- ══════════════ LOGIN SCREEN ══════════════ -->
 <div id="loginScreen" class="screen active">
@@ -29,9 +45,9 @@
       <label>Password</label>
       <input type="password" id="loginPassword" placeholder="••••••••" />
     </div>
-    <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+    <button class="btn-primary" id="loginBtn">Sign In</button>
     <div class="auth-footer">
-      Don't have an account? <a href="#" onclick="showScreen('signup')">Sign up</a>
+      Don't have an account? <a href="#" id="goToSignup">Sign up</a>
     </div>
   </div>
 </div>
@@ -61,9 +77,9 @@
       <label>Password</label>
       <input type="password" id="signupPassword" placeholder="Create a strong password" />
     </div>
-    <button class="btn-primary" onclick="handleSignup()">Create Account</button>
+    <button class="btn-primary" id="signupBtn">Create Account</button>
     <div class="auth-footer">
-      Already have an account? <a href="#" onclick="showScreen('login')">Sign in</a>
+      Already have an account? <a href="#" id="goToLogin">Sign in</a>
     </div>
   </div>
 </div>
@@ -83,57 +99,57 @@
 
     <div class="sidebar-nav">
       <div class="nav-section-label">Overview</div>
-      <div class="nav-link active" onclick="setActive(this)">
+      <div class="nav-link active" data-nav>
         <span class="icon">📊</span> Dashboard
       </div>
 
       <div class="nav-section-label">Accounts</div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">📋</span> Account Statements
         <span class="badge amber">14</span>
       </div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">🔄</span> Repeat Accounts
         <span class="badge">7</span>
       </div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">👤</span> Client Profiles
       </div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">✅</span> KYC Reviews
         <span class="badge amber">3</span>
       </div>
 
       <div class="nav-section-label">Risk</div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">⚠️</span> Risk Alerts
         <span class="badge">2</span>
       </div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">📈</span> Exposure Reports
       </div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">🔍</span> Audit Logs
       </div>
 
       <div class="nav-section-label">Support</div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">📧</span> Support Emails
         <span class="badge">5</span>
       </div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">🎫</span> Tickets
         <span class="badge green">12</span>
       </div>
 
       <div class="nav-section-label">Settings</div>
-      <div class="nav-link" onclick="setActive(this)">
+      <div class="nav-link" data-nav>
         <span class="icon">⚙️</span> Preferences
       </div>
     </div>
 
     <div class="sidebar-bottom">
-      <button class="logout-btn" onclick="handleLogout()">
+      <button class="logout-btn" id="logoutBtn">
         <span class="icon">🚪</span> Sign out
       </button>
     </div>
@@ -148,11 +164,12 @@
         <span id="dateLabel"></span>
       </div>
       <div class="topbar-actions">
-        <div class="topbar-icon-btn" title="Search">🔍</div>
+        <div class="topbar-icon-btn" id="searchBtn" title="Search">🔍</div>
         <div class="topbar-icon-btn" title="Notifications">
           🔔
           <span class="notif-dot"></span>
         </div>
+        <button class="topbar-icon-btn theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
         <div class="avatar-wrap">
           <div class="avatar" id="userAvatar">AJ</div>
           <div class="avatar-info">
@@ -210,7 +227,7 @@
               <button class="btn-sm">View All</button>
             </div>
           </div>
-          <table class="data-table">
+          <table class="data-table" id="statementsTable">
             <thead>
               <tr>
                 <th>Client</th>
@@ -445,8 +462,8 @@
             </div>
           </div>
           <div class="chart-area">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:500;">Cases resolved — last 7 days</div>
-            <div class="chart-bars" id="chartBars"></div>
+            <div class="chart-label">Cases resolved — last 7 days</div>
+            <canvas id="activityChart"></canvas>
           </div>
         </div>
 
@@ -455,6 +472,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
