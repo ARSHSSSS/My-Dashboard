@@ -3,10 +3,11 @@
    ═══════════════════════════════════════════════ */
 
 /* ── State ──────────────────────────────────────── */
-let currentUser  = null;
-let currentPage  = 'dashboard';
-let activityChart = null;
+let currentUser     = null;
+let currentPage     = 'dashboard';
+let activityChart   = null;
 let selectedEmailId = null;
+let activeAvatarTab = 'color';   // 'color' | 'emoji' | 'photo'
 
 /* ── Utilities ──────────────────────────────────── */
 const fmt = n => '$' + Number(n).toLocaleString('en-US');
@@ -194,9 +195,32 @@ function nameToColorId(name = '') {
 }
 
 function getAvatarBg(user) {
-  if (user.avatarType === 'emoji') return 'var(--surface2)';
+  if (user.avatarType === 'emoji' || user.avatarType === 'photo') return 'var(--surface2)';
   const id = user.avatarValue || nameToColorId(user.name);
-  return AVATAR_COLORS.find(c => c.id === id)?.bg || AVATAR_COLORS[0].bg;
+  const preset = AVATAR_COLORS.find(c => c.id === id);
+  if (preset) return preset.bg;
+  return id; // raw CSS colour (custom hex from colour picker)
+}
+
+/* ── Image compression (canvas → 160×160 JPEG ~20 KB) ── */
+function compressImage(file, cb) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const SIZE = 160;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = SIZE;
+      const ctx = canvas.getContext('2d');
+      const min = Math.min(img.width, img.height);
+      const sx  = (img.width  - min) / 2;
+      const sy  = (img.height - min) / 2;
+      ctx.drawImage(img, sx, sy, min, min, 0, 0, SIZE, SIZE);
+      cb(canvas.toDataURL('image/jpeg', 0.78));
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function applyUserColor(user) {
@@ -336,9 +360,14 @@ function updateSidebarBadges() {
 /* ── Dashboard init ─────────────────────────────── */
 function initDashboard() {
   const u = currentUser;
-  const initials = u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const initials = (u.avatarCustomInitials || u.name.split(' ').map(w => w[0]).join('')).slice(0, 2).toUpperCase();
   const av = document.getElementById('userAvatar');
-  if (u.avatarType === 'emoji' && u.avatarValue) {
+  if (u.avatarType === 'photo' && u.avatarValue) {
+    av.textContent = '';
+    av.style.background = `url(${u.avatarValue}) center/cover no-repeat`;
+    av.style.fontSize = '';
+    av.style.border = '2px solid var(--border)';
+  } else if (u.avatarType === 'emoji' && u.avatarValue) {
     av.textContent = u.avatarValue;
     av.style.background = 'var(--surface2)';
     av.style.fontSize = '20px';
@@ -376,7 +405,12 @@ const PAGE_MAP = {
 
 function navigate(page) {
   currentPage = page;
-  extendSession();   // any navigation resets the 30-min idle timer
+  extendSession();
+  /* Reset avatar tab to match current avatar type when entering profile */
+  if (page === 'profile') {
+    const t = currentUser?.avatarType;
+    activeAvatarTab = t === 'photo' ? 'photo' : t === 'emoji' ? 'emoji' : 'color';
+  }
   document.getElementById('notifPanel').classList.remove('open');
 
   // Update topbar title
@@ -398,8 +432,12 @@ function navigate(page) {
 
 function afterRender(page) {
   selectedEmailId = null;
-  if (page === 'dashboard')         initDashboardChart();
-  if (page === 'exposure-reports')  initExposureCharts();
+  if (page === 'dashboard')        initDashboardChart();
+  if (page === 'exposure-reports') initExposureCharts();
+  if (page === 'profile') {
+    const t = currentUser?.avatarType;
+    activeAvatarTab = t === 'photo' ? 'photo' : t === 'emoji' ? 'emoji' : 'color';
+  }
 }
 
 /* ════════════════════════════════════════════════
@@ -1073,28 +1111,74 @@ function renderPreferences() {
    PAGE: MY PROFILE
    ════════════════════════════════════════════════ */
 function renderProfile() {
-  const u        = currentUser;
-  const initials = u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const avatarBg = getAvatarBg(u);
-  const isEmoji  = u.avatarType === 'emoji' && u.avatarValue;
-  const isDemo   = u.email === DEMO_ACCOUNT.email;
-  const actions  = Store.get('audit').filter(a => /Approved|Resolved|Closed|Renewed/.test(a.action)).length;
+  const u          = currentUser;
+  const isPhoto    = u.avatarType === 'photo'  && u.avatarValue;
+  const isEmoji    = u.avatarType === 'emoji'  && u.avatarValue;
+  const isDemo     = u.email === DEMO_ACCOUNT.email;
+  const actions    = Store.get('audit').filter(a => /Approved|Resolved|Closed|Renewed/.test(a.action)).length;
+  const displayIni = (u.avatarCustomInitials || u.name.split(' ').map(w => w[0]).join('')).slice(0, 2).toUpperCase();
+  const avatarBg   = getAvatarBg(u);
+  const customHex  = (u.avatarType === 'custom' && u.avatarValue) ? u.avatarValue : '#6366f1';
 
-  const colorPickerHTML = AVATAR_COLORS.map(c => {
-    const sel = !isEmoji && (u.avatarValue || nameToColorId(u.name)) === c.id;
+  /* ── Hero avatar style ── */
+  const heroStyle = isPhoto
+    ? `background:url(${u.avatarValue}) center/cover no-repeat;border:2px solid var(--border)`
+    : `background:${avatarBg};${isEmoji ? 'font-size:42px;border:2px solid var(--border)' : ''}`;
+  const heroContent = isPhoto ? '' : isEmoji ? u.avatarValue : displayIni;
+
+  /* ── Colour tab HTML ── */
+  const colorSwatches = AVATAR_COLORS.map(c => {
+    const sel = (u.avatarType !== 'emoji' && u.avatarType !== 'photo' && (u.avatarValue || nameToColorId(u.name)) === c.id);
     return `<div class="avatar-swatch${sel ? ' selected' : ''}" data-action="set-avatar-color" data-color="${c.id}"
               style="background:${c.bg}" title="${c.id}">${sel ? '✓' : ''}</div>`;
   }).join('');
 
-  const emojiPickerHTML = AVATAR_EMOJIS.map(em => {
+  /* ── Emoji tab HTML ── */
+  const emojiGrid = AVATAR_EMOJIS.map(em => {
     const sel = isEmoji && u.avatarValue === em;
     return `<div class="avatar-emoji-opt${sel ? ' selected' : ''}" data-action="set-avatar-emoji" data-emoji="${em}">${em}</div>`;
   }).join('');
 
+  /* ── Photo tab HTML ── */
+  const photoPanel = isPhoto ? `
+    <div class="photo-current-wrap">
+      <div class="photo-preview-circle" style="background:url(${u.avatarValue}) center/cover no-repeat"></div>
+      <div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px;">Current photo</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <label class="btn-sm" style="cursor:pointer;">
+            ↑ Change photo
+            <input type="file" id="photoInput" accept="image/*" style="display:none">
+          </label>
+          <button class="btn-sm btn-danger" data-action="remove-photo">✕ Remove</button>
+        </div>
+      </div>
+    </div>` : `
+    <div class="photo-upload-zone" id="photoUploadZone" data-action="photo-upload-zone">
+      <input type="file" id="photoInput" accept="image/*" style="display:none">
+      <div style="font-size:36px;margin-bottom:10px">📷</div>
+      <div style="font-size:14px;font-weight:600;">Click to upload a photo</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px;">JPG, PNG or GIF · Stored locally</div>
+    </div>
+    <div id="photoPreviewWrap" style="display:none;">
+      <div class="photo-preview-wrap">
+        <div class="photo-preview-circle" id="photoPreviewCircle"></div>
+        <div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:10px;">Looking good!</div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn-primary" data-action="confirm-photo">✓ Use this photo</button>
+            <button class="btn-sm"      data-action="cancel-photo">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  const tab = activeAvatarTab;
+
   return `
   <div class="page-header">
     <h1>My Profile</h1>
-    <p>Manage your account info, avatar style, and security settings.</p>
+    <p>Manage your account info, avatar, and security settings.</p>
   </div>
 
   <div class="profile-grid">
@@ -1102,9 +1186,7 @@ function renderProfile() {
     <!-- ── Hero card ── -->
     <div class="widget profile-card" style="grid-column:1/-1">
       <div class="profile-hero">
-        <div class="profile-avatar-lg" style="background:${avatarBg};${isEmoji ? 'font-size:42px;border:2px solid var(--border)' : ''}">
-          ${isEmoji ? u.avatarValue : initials}
-        </div>
+        <div class="profile-avatar-lg" style="${heroStyle}">${heroContent}</div>
         <div class="profile-hero-info">
           <div class="profile-name">${u.name}</div>
           <div class="profile-email-text">${u.email}</div>
@@ -1132,12 +1214,47 @@ function renderProfile() {
 
     <!-- ── Avatar picker ── -->
     <div class="widget pref-section">
-      <div class="widget-header"><h3>🎨 Avatar Style</h3></div>
+      <div class="widget-header"><h3>🖼️ Avatar</h3></div>
       <div class="pref-body">
-        <div class="pref-label" style="margin-bottom:10px;font-size:12px;font-weight:600;color:var(--muted);">COLOR &amp; INITIALS</div>
-        <div class="avatar-color-grid">${colorPickerHTML}</div>
-        <div class="pref-label" style="margin:18px 0 10px;font-size:12px;font-weight:600;color:var(--muted);">EMOJI AVATAR</div>
-        <div class="avatar-emoji-grid">${emojiPickerHTML}</div>
+
+        <!-- Tab bar -->
+        <div class="av-tab-bar">
+          <button class="av-tab ${tab === 'color' ? 'active' : ''}" data-action="avatar-tab" data-tab="color">🎨 Colour</button>
+          <button class="av-tab ${tab === 'emoji' ? 'active' : ''}" data-action="avatar-tab" data-tab="emoji">😀 Emoji</button>
+          <button class="av-tab ${tab === 'photo' ? 'active' : ''}" data-action="avatar-tab" data-tab="photo">📷 Photo</button>
+        </div>
+
+        <!-- Colour & Initials tab -->
+        <div class="av-panel ${tab !== 'color' ? 'av-hidden' : ''}">
+          <div class="av-section-label">PRESET COLOURS</div>
+          <div class="avatar-color-grid">${colorSwatches}</div>
+
+          <div class="av-section-label" style="margin-top:18px">CUSTOM COLOUR</div>
+          <div class="custom-color-row">
+            <input type="color" id="customAvatarColor" value="${customHex}" title="Pick any colour">
+            <span style="font-size:13px;color:var(--muted);">Pick any colour for your avatar background</span>
+          </div>
+
+          <div class="av-section-label" style="margin-top:18px">CUSTOM INITIALS</div>
+          <div class="custom-initials-row">
+            <input type="text" id="customInitials" maxlength="2" placeholder="${displayIni}"
+              value="${u.avatarCustomInitials || ''}"
+              style="width:60px;text-align:center;font-size:18px;font-weight:700;text-transform:uppercase;" />
+            <button class="btn-sm" data-action="save-custom-initials">Apply</button>
+            <span style="font-size:12px;color:var(--muted);">Blank = use name (${displayIni})</span>
+          </div>
+        </div>
+
+        <!-- Emoji tab -->
+        <div class="av-panel ${tab !== 'emoji' ? 'av-hidden' : ''}">
+          <div class="avatar-emoji-grid">${emojiGrid}</div>
+        </div>
+
+        <!-- Photo tab -->
+        <div class="av-panel ${tab !== 'photo' ? 'av-hidden' : ''}">
+          ${photoPanel}
+        </div>
+
       </div>
     </div>
 
@@ -1587,6 +1704,56 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('Avatar updated.', 'success');
       return;
     }
+
+    /* ── Avatar tab switch ── */
+    if (action === 'avatar-tab') {
+      activeAvatarTab = btn.dataset.tab;
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      return;
+    }
+
+    /* ── Custom initials ── */
+    if (action === 'save-custom-initials') {
+      const raw = document.getElementById('customInitials')?.value.trim().toUpperCase().slice(0, 2) || '';
+      currentUser = { ...currentUser, avatarCustomInitials: raw || null };
+      saveProfileData(currentUser.email, { avatarCustomInitials: raw || null });
+      saveSession(currentUser);
+      initDashboard();
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      showToast(raw ? `Initials set to "${raw}".` : 'Using name-derived initials.', 'success');
+      return;
+    }
+
+    /* ── Photo upload ── */
+    if (action === 'photo-upload-zone') {
+      document.getElementById('photoInput')?.click();
+      return;
+    }
+    if (action === 'confirm-photo') {
+      if (!window._pendingPhoto) return;
+      currentUser = { ...currentUser, avatarType: 'photo', avatarValue: window._pendingPhoto };
+      saveProfileData(currentUser.email, { avatarType: 'photo', avatarValue: window._pendingPhoto });
+      saveSession(currentUser);
+      window._pendingPhoto = null;
+      initDashboard();
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      showToast('Profile photo saved.', 'success');
+      return;
+    }
+    if (action === 'cancel-photo') {
+      window._pendingPhoto = null;
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      return;
+    }
+    if (action === 'remove-photo') {
+      currentUser = { ...currentUser, avatarType: 'color', avatarValue: null };
+      saveProfileData(currentUser.email, { avatarType: 'color', avatarValue: null });
+      saveSession(currentUser);
+      initDashboard();
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      showToast('Profile photo removed.', 'info');
+      return;
+    }
     if (action === 'profile-change-pw') {
       const current = document.getElementById('pwCurrent')?.value;
       const newPw   = document.getElementById('pwNew')?.value;
@@ -1673,13 +1840,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  /* ── Toggle notification preferences ── */
+  /* ── mainContent change events ── */
   document.getElementById('mainContent').addEventListener('change', e => {
+
+    /* Notification toggles */
     if (e.target.dataset.action === 'toggle-notif') {
       const prefs = Store.get('preferences');
       prefs.notifications[e.target.dataset.key] = e.target.checked;
       Store.set('preferences', prefs);
       showToast(`Notification ${e.target.checked ? 'enabled' : 'disabled'}.`, 'info');
+      return;
+    }
+
+    /* Photo file input */
+    if (e.target.id === 'photoInput' && e.target.files?.[0]) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) { showToast('File is too large. Max 5 MB.', 'error'); return; }
+      compressImage(file, base64 => {
+        window._pendingPhoto = base64;
+        /* If there's already a photo (Change photo flow), skip straight to confirm */
+        if (currentUser.avatarType === 'photo') {
+          currentUser = { ...currentUser, avatarType: 'photo', avatarValue: base64 };
+          saveProfileData(currentUser.email, { avatarType: 'photo', avatarValue: base64 });
+          saveSession(currentUser);
+          window._pendingPhoto = null;
+          initDashboard();
+          document.getElementById('mainContent').innerHTML = renderProfile();
+          showToast('Profile photo updated.', 'success');
+          return;
+        }
+        /* New upload — show preview */
+        const circle = document.getElementById('photoPreviewCircle');
+        const wrap   = document.getElementById('photoPreviewWrap');
+        const zone   = document.getElementById('photoUploadZone');
+        if (circle) circle.style.cssText = `background:url(${base64}) center/cover no-repeat;width:80px;height:80px;border-radius:50%;flex-shrink:0;border:2px solid var(--border);`;
+        if (wrap)   wrap.style.display = 'flex';
+        if (zone)   zone.style.display = 'none';
+      });
+      return;
+    }
+
+    /* Custom colour picker */
+    if (e.target.id === 'customAvatarColor') {
+      const hex = e.target.value;
+      currentUser = { ...currentUser, avatarType: 'custom', avatarValue: hex };
+      saveProfileData(currentUser.email, { avatarType: 'custom', avatarValue: hex });
+      saveSession(currentUser);
+      initDashboard();
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      showToast('Custom colour applied.', 'success');
+      return;
     }
   });
 });
