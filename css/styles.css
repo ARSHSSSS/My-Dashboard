@@ -258,7 +258,7 @@ button { cursor: pointer; border: none; outline: none; }
 .topbar-title { font-size: 16px; font-weight: 600; flex: 1; }
 .topbar-title span { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 8px; }
 
-.topbar-actions { display: flex; align-items: center; gap: 14px; }
+.topbar-actions { display: flex; align-items: center; gap: 14px; position: relative; }
 .topbar-icon-btn {
   width: 36px; height: 36px;
   border-radius: 8px;
@@ -1007,3 +1007,99 @@ button { cursor: pointer; border: none; outline: none; }
 
 /* ── Date label removed from topbar ──────────────────── */
 #dateLabel { display: none; }
+
+/* ══════════════════════════════════════════════════════
+   AVATAR DROPDOWN
+   ══════════════════════════════════════════════════════ */
+.avatar-dropdown-wrap { position: relative; }
+.avatar-wrap { cursor: pointer; display: flex; align-items: center; gap: 10px; }
+.avatar-chevron { font-size: 10px; color: var(--muted); margin-left: -4px; }
+
+.avatar-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px); right: 0;
+  width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px var(--shadow);
+  z-index: 200;
+  overflow: hidden;
+  animation: modalIn .15s ease;
+}
+.avatar-menu.open { display: block; }
+.avatar-menu-header { padding: 14px 16px; }
+.avatar-menu-divider { height: 1px; background: var(--border); }
+.avatar-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 16px;
+  font-size: 13px; color: var(--text);
+  cursor: pointer;
+  transition: background .1s;
+}
+.avatar-menu-item:hover { background: var(--surface2); }
+.avatar-menu-item.danger { color: var(--red); }
+
+/* ══════════════════════════════════════════════════════
+   PROFILE PAGE
+   ══════════════════════════════════════════════════════ */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.profile-hero {
+  display: flex; align-items: center; gap: 24px;
+  padding: 28px 28px 0;
+  flex-wrap: wrap;
+}
+.profile-avatar-lg {
+  width: 84px; height: 84px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 8px 28px rgba(0,0,0,.25);
+}
+.profile-hero-info { flex: 1; min-width: 160px; }
+.profile-name { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.profile-email-text { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.profile-role-tag {
+  display: inline-block;
+  background: rgba(99,102,241,.12); color: var(--accent2);
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+}
+.profile-stats-row {
+  display: flex; gap: 32px; flex-wrap: wrap;
+  padding: 20px 28px 24px; border-top: 1px solid var(--border); margin-top: 20px;
+  width: 100%;
+}
+.profile-stat { text-align: center; }
+.profile-stat-val { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+.profile-stat-lbl { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+
+/* ── Avatar picker ── */
+.avatar-color-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.avatar-swatch {
+  width: 38px; height: 38px; border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: rgba(255,255,255,.9);
+  border: 3px solid transparent;
+  transition: transform .15s, border-color .15s, box-shadow .15s;
+}
+.avatar-swatch:hover { transform: scale(1.12); box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.avatar-swatch.selected { border-color: var(--text); transform: scale(1.1); }
+
+.avatar-emoji-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+.avatar-emoji-opt {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--surface2); border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; cursor: pointer;
+  transition: border-color .15s, transform .15s;
+}
+.avatar-emoji-opt:hover { border-color: var(--accent); transform: scale(1.08); }
+.avatar-emoji-opt.selected { border-color: var(--accent); background: rgba(99,102,241,.12); }

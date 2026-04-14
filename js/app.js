@@ -140,6 +140,73 @@ function showScreen(name) {
 /* ── Demo / built-in credentials ──────────────────── */
 const DEMO_ACCOUNT = { name: 'Demo Agent', email: 'demo@forexguard.com', password: 'Demo@2026' };
 
+/* ══════════════════════════════════════════════════
+   SESSION (30-minute expiry)
+   ══════════════════════════════════════════════════ */
+const SESSION_MS = 30 * 60 * 1000;
+
+function saveSession(user) {
+  localStorage.setItem('fg-session', JSON.stringify({ user, expiry: Date.now() + SESSION_MS }));
+}
+
+function loadSession() {
+  const s = JSON.parse(localStorage.getItem('fg-session') || 'null');
+  if (s && s.expiry > Date.now()) return s.user;
+  localStorage.removeItem('fg-session');
+  return null;
+}
+
+function extendSession() {
+  if (currentUser) saveSession(currentUser);
+}
+
+/* ══════════════════════════════════════════════════
+   PROFILE STORE  (avatar, stats — per email)
+   ══════════════════════════════════════════════════ */
+function getProfile(email) {
+  return JSON.parse(localStorage.getItem('fg-profile-' + email) || '{}');
+}
+
+function saveProfileData(email, data) {
+  localStorage.setItem('fg-profile-' + email, JSON.stringify({ ...getProfile(email), ...data }));
+}
+
+/* ══════════════════════════════════════════════════
+   AVATAR  SYSTEM
+   ══════════════════════════════════════════════════ */
+const AVATAR_COLORS = [
+  { id: 'indigo',  bg: 'linear-gradient(135deg,#6366f1,#4f46e5)', hex: '#6366f1' },
+  { id: 'blue',    bg: 'linear-gradient(135deg,#3b82f6,#2563eb)', hex: '#3b82f6' },
+  { id: 'violet',  bg: 'linear-gradient(135deg,#8b5cf6,#7c3aed)', hex: '#8b5cf6' },
+  { id: 'emerald', bg: 'linear-gradient(135deg,#10b981,#059669)', hex: '#10b981' },
+  { id: 'rose',    bg: 'linear-gradient(135deg,#f43f5e,#e11d48)', hex: '#f43f5e' },
+  { id: 'amber',   bg: 'linear-gradient(135deg,#f59e0b,#d97706)', hex: '#f59e0b' },
+  { id: 'cyan',    bg: 'linear-gradient(135deg,#06b6d4,#0891b2)', hex: '#06b6d4' },
+  { id: 'pink',    bg: 'linear-gradient(135deg,#ec4899,#db2777)', hex: '#ec4899' },
+];
+const AVATAR_EMOJIS = ['🦁','🐯','🦊','🐺','🦅','🐉','🦄','🌊','⚡','🔥','🎯','🛡️'];
+
+function nameToColorId(name = '') {
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length].id;
+}
+
+function getAvatarBg(user) {
+  if (user.avatarType === 'emoji') return 'var(--surface2)';
+  const id = user.avatarValue || nameToColorId(user.name);
+  return AVATAR_COLORS.find(c => c.id === id)?.bg || AVATAR_COLORS[0].bg;
+}
+
+function applyUserColor(user) {
+  const id  = (user.avatarType !== 'emoji' && user.avatarValue) ? user.avatarValue : nameToColorId(user.name);
+  const hex = AVATAR_COLORS.find(c => c.id === id)?.hex || '#6366f1';
+  document.documentElement.style.setProperty('--user-color', hex);
+  let s = document.getElementById('user-color-style');
+  if (!s) { s = document.createElement('style'); s.id = 'user-color-style'; document.head.appendChild(s); }
+  s.textContent = `.nav-link.active{color:${hex}!important;background:${hex}22!important}.nav-link.active .icon{color:${hex}!important}`;
+}
+
 function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass  = document.getElementById('loginPassword').value;
@@ -169,8 +236,17 @@ function handleLogin() {
   }
 
   err.classList.remove('show');
-  currentUser = matchedUser;
-  localStorage.setItem('fg-user', JSON.stringify(currentUser));
+
+  /* Merge with saved profile data (avatar, stats) */
+  const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const profile = getProfile(matchedUser.email);
+  profile.loginCount = (profile.loginCount || 0) + 1;
+  profile.lastActive = now;
+  if (!profile.joinedDate) profile.joinedDate = now;
+  saveProfileData(matchedUser.email, profile);
+
+  currentUser = { ...matchedUser, ...profile };
+  saveSession(currentUser);
   Store.addAudit('Login', currentUser.name, 'Signed in via email/password');
   initDashboard();
   showScreen('dashboard');
@@ -203,8 +279,10 @@ function handleSignup() {
   localStorage.setItem('fg-accounts', JSON.stringify(accounts));
 
   err.classList.remove('show');
-  currentUser = { name, email };
-  localStorage.setItem('fg-user', JSON.stringify(currentUser));
+  const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  saveProfileData(email, { joinedDate: now, loginCount: 1, lastActive: now });
+  currentUser = { name, email, joinedDate: now, loginCount: 1, lastActive: now };
+  saveSession(currentUser);
   Store.addAudit('Signup', name, 'Created new agent account');
   initDashboard();
   showScreen('dashboard');
@@ -214,7 +292,7 @@ function handleSignup() {
 
 function handleLogout() {
   Store.addAudit('Logout', currentUser?.name || 'Agent', 'Signed out');
-  localStorage.removeItem('fg-user');
+  localStorage.removeItem('fg-session');
   currentUser = null;
   if (activityChart) { activityChart.destroy(); activityChart = null; }
   document.getElementById('loginEmail').value    = '';
@@ -223,13 +301,48 @@ function handleLogout() {
   showToast('Signed out successfully.', 'info');
 }
 
+/* ── Sidebar badge counts ────────────────────────── */
+function updateSidebarBadges() {
+  const counts = {
+    'statements':      { n: Store.get('statements').filter(s => s.status === 'pending').length,      cls: 'amber' },
+    'repeat-accounts': { n: Store.get('repeatAccounts').filter(r => r.status === 'pending').length,  cls: '' },
+    'kyc-reviews':     { n: Store.get('kyc').filter(k => k.status !== 'valid').length,              cls: 'amber' },
+    'risk-alerts':     { n: Store.get('alerts').filter(a => a.status === 'active').length,           cls: '' },
+    'support-emails':  { n: Store.get('emails').filter(e => !e.read).length,                        cls: '' },
+    'tickets':         { n: Store.get('tickets').filter(t => t.status !== 'closed').length,         cls: 'green' },
+  };
+  Object.entries(counts).forEach(([page, { n, cls }]) => {
+    const link = document.querySelector(`.nav-link[data-page="${page}"]`);
+    if (!link) return;
+    let badge = link.querySelector('.badge');
+    if (n > 0) {
+      if (!badge) { badge = document.createElement('span'); link.appendChild(badge); }
+      badge.className = 'badge' + (cls ? ' ' + cls : '');
+      badge.textContent = n;
+    } else if (badge) { badge.remove(); }
+  });
+}
+
 /* ── Dashboard init ─────────────────────────────── */
 function initDashboard() {
-  const initials = currentUser.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  document.getElementById('userAvatar').textContent = initials;
-  document.getElementById('userName').textContent   = currentUser.name;
-  // greetName, greeting, dateLabel live inside #mainContent — set after render in afterRender()
+  const u = currentUser;
+  const initials = u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const av = document.getElementById('userAvatar');
+  if (u.avatarType === 'emoji' && u.avatarValue) {
+    av.textContent = u.avatarValue;
+    av.style.background = 'var(--surface2)';
+    av.style.fontSize = '20px';
+    av.style.border = '2px solid var(--border)';
+  } else {
+    av.textContent = initials;
+    av.style.background = getAvatarBg(u);
+    av.style.fontSize = '';
+    av.style.border = '';
+  }
+  document.getElementById('userName').textContent = u.name;
+  applyUserColor(u);
   renderNotifications();
+  updateSidebarBadges();
 }
 
 /* ════════════════════════════════════════════════
@@ -247,10 +360,12 @@ const PAGE_MAP = {
   'support-emails': { label: 'Support Emails',      render: renderSupportEmails },
   tickets:          { label: 'Tickets',             render: renderTickets },
   preferences:      { label: 'Preferences',         render: renderPreferences },
+  profile:          { label: 'My Profile',          render: renderProfile },
 };
 
 function navigate(page) {
   currentPage = page;
+  extendSession();   // any navigation resets the 30-min idle timer
   document.getElementById('notifPanel').classList.remove('open');
 
   // Update topbar title
@@ -930,6 +1045,96 @@ function renderPreferences() {
 }
 
 /* ════════════════════════════════════════════════
+   PAGE: MY PROFILE
+   ════════════════════════════════════════════════ */
+function renderProfile() {
+  const u        = currentUser;
+  const initials = u.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const avatarBg = getAvatarBg(u);
+  const isEmoji  = u.avatarType === 'emoji' && u.avatarValue;
+  const isDemo   = u.email === DEMO_ACCOUNT.email;
+  const actions  = Store.get('audit').filter(a => /Approved|Resolved|Closed|Renewed/.test(a.action)).length;
+
+  const colorPickerHTML = AVATAR_COLORS.map(c => {
+    const sel = !isEmoji && (u.avatarValue || nameToColorId(u.name)) === c.id;
+    return `<div class="avatar-swatch${sel ? ' selected' : ''}" data-action="set-avatar-color" data-color="${c.id}"
+              style="background:${c.bg}" title="${c.id}">${sel ? '✓' : ''}</div>`;
+  }).join('');
+
+  const emojiPickerHTML = AVATAR_EMOJIS.map(em => {
+    const sel = isEmoji && u.avatarValue === em;
+    return `<div class="avatar-emoji-opt${sel ? ' selected' : ''}" data-action="set-avatar-emoji" data-emoji="${em}">${em}</div>`;
+  }).join('');
+
+  return `
+  <div class="page-header">
+    <h1>My Profile</h1>
+    <p>Manage your account info, avatar style, and security settings.</p>
+  </div>
+
+  <div class="profile-grid">
+
+    <!-- ── Hero card ── -->
+    <div class="widget profile-card" style="grid-column:1/-1">
+      <div class="profile-hero">
+        <div class="profile-avatar-lg" style="background:${avatarBg};${isEmoji ? 'font-size:42px;border:2px solid var(--border)' : ''}">
+          ${isEmoji ? u.avatarValue : initials}
+        </div>
+        <div class="profile-hero-info">
+          <div class="profile-name">${u.name}</div>
+          <div class="profile-email-text">${u.email}</div>
+          <span class="profile-role-tag">Risk Management Agent</span>
+        </div>
+        <div class="profile-stats-row">
+          <div class="profile-stat"><div class="profile-stat-val">${u.loginCount || 1}</div><div class="profile-stat-lbl">Logins</div></div>
+          <div class="profile-stat"><div class="profile-stat-val">${actions}</div><div class="profile-stat-lbl">Actions</div></div>
+          <div class="profile-stat"><div class="profile-stat-val">${u.joinedDate || 'Today'}</div><div class="profile-stat-lbl">Member Since</div></div>
+          <div class="profile-stat"><div class="profile-stat-val">${u.lastActive || 'Today'}</div><div class="profile-stat-lbl">Last Active</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Edit info ── -->
+    <div class="widget pref-section">
+      <div class="widget-header"><h3>✏️ Edit Info</h3></div>
+      <div class="pref-body">
+        <div class="pref-field"><label>Display Name</label><input type="text" id="profName" value="${u.name}" /></div>
+        <div class="pref-field"><label>Email</label><input type="email" id="profEmail" value="${u.email}"${isDemo ? ' disabled title="Demo email cannot be changed"' : ''} /></div>
+        <div class="pref-field"><label>Role</label><input type="text" value="Risk Management Agent" disabled /></div>
+        <button class="btn-primary" data-action="profile-save-info">Save Changes</button>
+      </div>
+    </div>
+
+    <!-- ── Avatar picker ── -->
+    <div class="widget pref-section">
+      <div class="widget-header"><h3>🎨 Avatar Style</h3></div>
+      <div class="pref-body">
+        <div class="pref-label" style="margin-bottom:10px;font-size:12px;font-weight:600;color:var(--muted);">COLOR &amp; INITIALS</div>
+        <div class="avatar-color-grid">${colorPickerHTML}</div>
+        <div class="pref-label" style="margin:18px 0 10px;font-size:12px;font-weight:600;color:var(--muted);">EMOJI AVATAR</div>
+        <div class="avatar-emoji-grid">${emojiPickerHTML}</div>
+      </div>
+    </div>
+
+    <!-- ── Change password ── -->
+    <div class="widget pref-section" style="grid-column:1/-1">
+      <div class="widget-header"><h3>🔐 Change Password</h3></div>
+      <div class="pref-body" style="max-width:420px">
+        ${isDemo
+          ? `<div class="demo-hint"><span class="demo-label">Demo Account</span><span>Password changes are disabled for the demo account.</span></div>`
+          : `<div id="pwMsg" class="error-msg"></div>
+             <div class="pref-field"><label>Current password</label><input type="password" id="pwCurrent" placeholder="••••••••" /></div>
+             <div class="pref-field"><label>New password</label><input type="password" id="pwNew" placeholder="Min. 6 characters" /></div>
+             <div class="pref-field"><label>Confirm new password</label><input type="password" id="pwConfirm" placeholder="Repeat new password" /></div>
+             <button class="btn-primary" data-action="profile-change-pw">Update Password</button>`
+        }
+      </div>
+    </div>
+
+  </div>`;
+}
+
+/* ════════════════════════════════════════════════
    SEARCH
    ════════════════════════════════════════════════ */
 function openSearch() {
@@ -1082,10 +1287,20 @@ function openNewTicketModal() {
    ════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ── Init theme — always start at login ── */
+  /* ── Init theme ── */
   applyTheme(localStorage.getItem('fg-theme') || 'dark');
-  localStorage.removeItem('fg-user'); // always require fresh sign-in on page load
-  showScreen('login');
+
+  /* ── Session restore (30-min window) ── */
+  const savedSession = loadSession();
+  if (savedSession) {
+    currentUser = savedSession;
+    extendSession();          // reset the 30-min timer on page load
+    initDashboard();
+    showScreen('dashboard');
+    navigate('dashboard');
+  } else {
+    showScreen('login');
+  }
 
   /* ── Auth ── */
   document.getElementById('loginBtn').addEventListener('click', handleLogin);
@@ -1098,6 +1313,28 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
   document.getElementById('notifBtn').addEventListener('click', e => { e.stopPropagation(); toggleNotifications(); });
   document.getElementById('searchBtn').addEventListener('click', openSearch);
+
+  /* ── Avatar dropdown ── */
+  document.getElementById('avatarBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    const menu = document.getElementById('avatarMenu');
+    document.getElementById('avatarMenuHeader').innerHTML = `
+      <div style="font-size:13px;font-weight:700;">${currentUser?.name || 'Agent'}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">${currentUser?.email || ''}</div>`;
+    menu.classList.toggle('open');
+  });
+  document.getElementById('avatarMenu').addEventListener('click', e => {
+    const item = e.target.closest('[data-avatar-nav]');
+    document.getElementById('avatarMenu').classList.remove('open');
+    if (item) { navigate(item.dataset.avatarNav); return; }
+    if (e.target.id === 'avatarMenuLogout') handleLogout();
+  });
+  document.addEventListener('click', e => {
+    const menu = document.getElementById('avatarMenu');
+    if (menu?.classList.contains('open') && !menu.contains(e.target) && e.target.id !== 'avatarBtn') {
+      menu.classList.remove('open');
+    }
+  });
 
   /* ── Sidebar nav ── */
   document.querySelectorAll('.nav-link[data-page]').forEach(link => {
@@ -1170,14 +1407,14 @@ document.addEventListener('DOMContentLoaded', () => {
       Store.addAudit('Approved Statement', `#${id}`, 'Account statement reviewed and approved');
       showToast(`Statement #${id} approved.`, 'success');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderStatements();
-      renderNotifications(); return;
+      renderNotifications(); updateSidebarBadges(); return;
     }
     if (action === 'reject-stmt') {
       Store.update('statements', id, { status: 'rejected' });
       Store.addAudit('Rejected Statement', `#${id}`, 'Account statement rejected after review');
       showToast(`Statement #${id} rejected.`, 'error');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderStatements();
-      renderNotifications(); return;
+      renderNotifications(); updateSidebarBadges(); return;
     }
 
     /* ── Repeat account actions ── */
@@ -1186,14 +1423,14 @@ document.addEventListener('DOMContentLoaded', () => {
       Store.addAudit('Approved Repeat Account', r?.client || id, 'New account creation approved');
       showToast(`${r?.client || id} approved.`, 'success');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
-      renderNotifications(); return;
+      renderNotifications(); updateSidebarBadges(); return;
     }
     if (action === 'deny-repeat') {
       const r = Store.update('repeatAccounts', id, { status: 'denied' });
       Store.addAudit('Denied Repeat Account', r?.client || id, 'New account request denied');
       showToast(`${r?.client || id} denied.`, 'error');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
-      renderNotifications(); return;
+      renderNotifications(); updateSidebarBadges(); return;
     }
 
     /* ── Alert actions ── */
@@ -1202,7 +1439,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Store.addAudit('Resolved Alert', a?.title || id, 'Risk alert marked as resolved');
       showToast('Alert marked as resolved.', 'success');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRiskAlerts();
-      renderNotifications(); return;
+      renderNotifications(); updateSidebarBadges(); return;
     }
 
     /* ── KYC actions ── */
@@ -1242,7 +1479,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Store.update('emails', id, { read: true });
       Store.addAudit('Read Email', id, 'Support email opened and marked as read');
       document.getElementById('mainContent').innerHTML = renderSupportEmails();
-      renderNotifications(); return;
+      renderNotifications(); updateSidebarBadges(); return;
     }
     if (action === 'read-email') {
       Store.update('emails', id, { read: true });
@@ -1250,7 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.target.closest('.email-item')?.classList.remove('unread');
       const dot = e.target.closest('.email-item')?.querySelector('.email-dot');
       if (dot) dot.classList.add('invisible');
-      renderNotifications(); return;
+      renderNotifications(); updateSidebarBadges(); return;
     }
     if (action === 'compose-email') { openComposeModal(); return; }
     if (action === 'reply-email')   { openReplyModal(id); return; }
@@ -1262,11 +1499,65 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = document.getElementById('prefEmail')?.value.trim();
       if (name && email) {
         currentUser = { ...currentUser, name, email };
-        localStorage.setItem('fg-user', JSON.stringify(currentUser));
+        saveSession(currentUser);
         initDashboard();
         Store.addAudit('Updated Profile', name, 'Agent profile name and email updated');
         showToast('Profile saved.', 'success');
       }
+      return;
+    }
+
+    /* ── Profile page actions ── */
+    if (action === 'profile-save-info') {
+      const name  = document.getElementById('profName')?.value.trim();
+      const email = document.getElementById('profEmail')?.value.trim();
+      if (!name || !email) { showToast('Name and email are required.', 'error'); return; }
+      currentUser = { ...currentUser, name, email };
+      saveSession(currentUser);
+      initDashboard();
+      Store.addAudit('Updated Profile', name, 'Profile info updated');
+      showToast('Profile saved.', 'success');
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      return;
+    }
+    if (action === 'set-avatar-color') {
+      const color = btn.dataset.color;
+      currentUser = { ...currentUser, avatarType: 'color', avatarValue: color };
+      saveProfileData(currentUser.email, { avatarType: 'color', avatarValue: color });
+      saveSession(currentUser);
+      initDashboard();
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      showToast('Avatar updated.', 'success');
+      return;
+    }
+    if (action === 'set-avatar-emoji') {
+      const emoji = btn.dataset.emoji;
+      currentUser = { ...currentUser, avatarType: 'emoji', avatarValue: emoji };
+      saveProfileData(currentUser.email, { avatarType: 'emoji', avatarValue: emoji });
+      saveSession(currentUser);
+      initDashboard();
+      document.getElementById('mainContent').innerHTML = renderProfile();
+      showToast('Avatar updated.', 'success');
+      return;
+    }
+    if (action === 'profile-change-pw') {
+      const current = document.getElementById('pwCurrent')?.value;
+      const newPw   = document.getElementById('pwNew')?.value;
+      const confirm = document.getElementById('pwConfirm')?.value;
+      const msg     = document.getElementById('pwMsg');
+      const setMsg  = (t) => { msg.textContent = t; msg.classList.add('show'); };
+      if (!current || !newPw || !confirm) { setMsg('Please fill in all fields.'); return; }
+      if (newPw.length < 6)               { setMsg('New password must be at least 6 characters.'); return; }
+      if (newPw !== confirm)              { setMsg('Passwords do not match.'); return; }
+      const accounts = JSON.parse(localStorage.getItem('fg-accounts') || '[]');
+      const idx = accounts.findIndex(a => a.email.toLowerCase() === currentUser.email.toLowerCase());
+      if (idx === -1 || accounts[idx].password !== current) { setMsg('Current password is incorrect.'); return; }
+      accounts[idx].password = newPw;
+      localStorage.setItem('fg-accounts', JSON.stringify(accounts));
+      msg.classList.remove('show');
+      ['pwCurrent','pwNew','pwConfirm'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      Store.addAudit('Changed Password', currentUser.name, 'Account password updated');
+      showToast('Password updated successfully.', 'success');
       return;
     }
     if (action === 'set-theme') {

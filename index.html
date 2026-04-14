@@ -102,6 +102,7 @@
       <div class="nav-link" data-page="tickets"><span class="icon">🎫</span> Tickets <span class="badge green">12</span></div>
 
       <div class="nav-section-label">Settings</div>
+      <div class="nav-link" data-page="profile"><span class="icon">👤</span> My Profile</div>
       <div class="nav-link" data-page="preferences"><span class="icon">⚙️</span> Preferences</div>
     </div>
 
@@ -121,11 +122,22 @@
           🔔<span class="notif-dot"></span>
         </div>
         <button class="topbar-icon-btn theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
-        <div class="avatar-wrap">
-          <div class="avatar" id="userAvatar">AJ</div>
-          <div class="avatar-info">
-            <div class="avatar-name" id="userName">Agent</div>
-            <div class="avatar-role">Risk Management Agent</div>
+        <div class="avatar-dropdown-wrap">
+          <div class="avatar-wrap" id="avatarBtn">
+            <div class="avatar" id="userAvatar">AJ</div>
+            <div class="avatar-info">
+              <div class="avatar-name" id="userName">Agent</div>
+              <div class="avatar-role">Risk Management Agent</div>
+            </div>
+            <span class="avatar-chevron">▾</span>
+          </div>
+          <div id="avatarMenu" class="avatar-menu">
+            <div class="avatar-menu-header" id="avatarMenuHeader"></div>
+            <div class="avatar-menu-divider"></div>
+            <div class="avatar-menu-item" data-avatar-nav="profile">👤 &nbsp;My Profile</div>
+            <div class="avatar-menu-item" data-avatar-nav="preferences">⚙️ &nbsp;Preferences</div>
+            <div class="avatar-menu-divider"></div>
+            <div class="avatar-menu-item danger" id="avatarMenuLogout">🚪 &nbsp;Sign Out</div>
           </div>
         </div>
       </div>
