@@ -48,6 +48,57 @@ function severityIcon(s) {
   return map[s] || 'alert-icon blue';
 }
 
+/* ── Confetti ───────────────────────────────────── */
+function launchConfetti() {
+  const colours = ['#3b82f6','#22c55e','#f59e0b','#6366f1','#ec4899','#ffffff'];
+  const canvas  = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+
+  const pieces = Array.from({ length: 90 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -10 - Math.random() * 100,
+    w: 6 + Math.random() * 8,
+    h: 4 + Math.random() * 6,
+    r: Math.random() * Math.PI * 2,
+    dr: (Math.random() - 0.5) * 0.15,
+    vx: (Math.random() - 0.5) * 3,
+    vy: 2 + Math.random() * 4,
+    color: colours[Math.floor(Math.random() * colours.length)],
+    alpha: 1
+  }));
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    pieces.forEach(p => {
+      p.x  += p.vx;
+      p.y  += p.vy;
+      p.r  += p.dr;
+      p.vy += 0.08; // gravity
+      if (p.y > canvas.height * 0.7) p.alpha -= 0.025;
+      if (p.alpha > 0) {
+        alive = true;
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.r);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      }
+    });
+    if (alive) frame = requestAnimationFrame(draw);
+    else canvas.remove();
+  }
+  draw();
+  setTimeout(() => { cancelAnimationFrame(frame); canvas.remove(); }, 3000);
+}
+
 /* ── Toast ──────────────────────────────────────── */
 function showToast(message, type = 'info', undoFn = null) {
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
@@ -2154,6 +2205,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Store.addAudit('Approved Statement', `#${id}`, 'Account statement reviewed and approved');
       const rerender = () => { if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderStatements(); renderNotifications(); updateSidebarBadges(); };
       rerender();
+      launchConfetti();
       showToast(`Statement #${id} approved.`, 'success', () => {
         Store.update('statements', id, { status: prev });
         document.getElementById('mainContent').innerHTML = renderStatements();
@@ -2181,6 +2233,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Store.addAudit('Approved Repeat Account', r?.client || id, 'New account creation approved');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
       renderNotifications(); updateSidebarBadges();
+      launchConfetti();
       showToast(`${r?.client || id} approved.`, 'success', () => {
         Store.update('repeatAccounts', id, { status: 'pending' });
         document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
@@ -2207,6 +2260,7 @@ document.addEventListener('DOMContentLoaded', () => {
       Store.addAudit('Resolved Alert', a?.title || id, 'Risk alert marked as resolved');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRiskAlerts();
       renderNotifications(); updateSidebarBadges();
+      launchConfetti();
       showToast('Alert marked as resolved.', 'success', () => {
         Store.update('alerts', id, { status: 'active' });
         document.getElementById('mainContent').innerHTML = renderRiskAlerts();
