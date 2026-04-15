@@ -1700,3 +1700,49 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
   transition: background .15s, color .15s, border-color .15s;
 }
 .export-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ══════════════════════════════════════════════════════
+   PRINT / PDF STYLES
+   ══════════════════════════════════════════════════════ */
+@media print {
+  /* Hide everything except the main content */
+  .sidebar, .topbar, .mobile-bottom-nav, .notif-panel,
+  #searchOverlay, #modal, #toastContainer,
+  .export-btn, .filter-tabs, .page-header button,
+  .sidebar-overlay { display: none !important; }
+
+  .main-wrap { margin-left: 0 !important; }
+  .content   { padding: 0 !important; }
+
+  body, html {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  /* Make cards white with a border */
+  .stat-card, .widget {
+    background: #fff !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+
+  .widget-header h3 { color: #1e293b !important; }
+  .data-table th, .data-table td { color: #1e293b !important; border-color: #e2e8f0 !important; }
+  .data-table thead { background: #f1f5f9 !important; }
+  .muted-text, .stat-sub, .stat-label { color: #64748b !important; }
+
+  /* Print title */
+  .content::before {
+    content: "ForexGuard — Exposure Report  ·  " attr(data-print-date);
+    display: block;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 16px;
+    font-family: system-ui, sans-serif;
+  }
+
+  /* Page breaks */
+  .stats-grid   { break-inside: avoid; }
+  .widgets-grid { break-inside: avoid; }
+}

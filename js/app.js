@@ -1073,18 +1073,20 @@ function renderRiskAlerts(filter = 'all') {
    PAGE: EXPOSURE REPORTS
    ════════════════════════════════════════════════ */
 function renderExposureReports() {
+  const now = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
   return `
   <div class="page-header">
     <h1>Exposure Reports</h1>
     <p>Visualise portfolio risk exposure across currency pairs and timeframes.</p>
+    <button class="btn-sm export-btn" onclick="printExposureReport()" style="margin-top:10px;">🖨 Print / Save PDF</button>
   </div>
-  <div class="stats-grid">
+  <div class="stats-grid" id="exposureStats">
     <div class="stat-card accent-red"><div class="stat-icon">💰</div><div class="stat-label">Total Exposure</div><div class="stat-value">$8.4B</div><div class="stat-sub"><span class="up">↑ 3.2%</span> vs last week</div></div>
     <div class="stat-card accent-amber"><div class="stat-icon">⚠️</div><div class="stat-label">High Risk Accounts</div><div class="stat-value">12</div><div class="stat-sub"><span class="down">2 new</span> this week</div></div>
     <div class="stat-card accent-blue"><div class="stat-icon">📈</div><div class="stat-label">Open Positions</div><div class="stat-value">1,847</div><div class="stat-sub"><span class="muted-text">Across 10 pairs</span></div></div>
     <div class="stat-card accent-green"><div class="stat-icon">✅</div><div class="stat-label">Margin Health</div><div class="stat-value">94%</div><div class="stat-sub"><span class="up">Accounts above 120%</span></div></div>
   </div>
-  <div class="widgets-grid">
+  <div class="widgets-grid" id="exposureCharts">
     <div class="widget">
       <div class="widget-header"><h3>📊 Daily Exposure (Last 14 Days)</h3></div>
       <div class="chart-area-lg"><canvas id="exposureLineChart"></canvas></div>
@@ -1093,7 +1095,35 @@ function renderExposureReports() {
       <div class="widget-header"><h3>🥧 Exposure by Currency Pair</h3></div>
       <div class="chart-area-lg chart-center"><canvas id="exposureDoughnutChart"></canvas></div>
     </div>
+  </div>
+  <div class="widget" id="exposureTable">
+    <div class="widget-header"><h3>📋 Pair Exposure Breakdown</h3><span class="muted-text" style="font-size:12px;">As of ${now}</span></div>
+    <table class="data-table">
+      <thead><tr><th>Currency Pair</th><th>Exposure ($M)</th><th>% of Portfolio</th><th>Open Positions</th><th>Avg Margin</th><th>Risk Level</th></tr></thead>
+      <tbody>
+        ${[
+          ['EUR/USD', 2688, 32, 591, '142%', 'green'],
+          ['USD/JPY', 2016, 24, 444, '138%', 'green'],
+          ['GBP/USD', 1512, 18, 333, '121%', 'amber'],
+          ['USD/CHF',  1008, 12, 222, '115%', 'amber'],
+          ['AUD/USD',  672,  8, 148, '108%', 'red'],
+          ['Other',    504,  6, 109, '119%', 'green'],
+        ].map(([pair, exp, pct, pos, margin, risk]) => `
+        <tr>
+          <td><strong>${pair}</strong></td>
+          <td>$${exp.toLocaleString()}M</td>
+          <td>${pct}%</td>
+          <td>${pos.toLocaleString()}</td>
+          <td><span class="text-${risk} fw-600">${margin}</span></td>
+          <td><span class="pill ${risk}">${risk === 'green' ? 'low' : risk === 'amber' ? 'medium' : 'high'}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
   </div>`;
+}
+
+function printExposureReport() {
+  window.print();
 }
 
 function initExposureCharts() {
