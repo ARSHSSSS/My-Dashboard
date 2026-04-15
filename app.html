@@ -162,7 +162,22 @@
       <div id="signupError" class="error-msg">Please fill in all fields.</div>
       <div class="field"><label>Full name</label><input type="text" id="signupName" placeholder="Alex Johnson" /></div>
       <div class="field"><label>Email address</label><input type="email" id="signupEmail" placeholder="agent@forexguard.com" /></div>
-      <div class="field"><label>Password</label><input type="password" id="signupPassword" placeholder="Create a strong password" /></div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="Create a strong password" oninput="updatePasswordStrength(this.value)" />
+        <div class="pw-strength-wrap" id="pwStrengthWrap" style="display:none">
+          <div class="pw-strength-bar">
+            <div class="pw-strength-fill" id="pwStrengthFill"></div>
+          </div>
+          <span class="pw-strength-label" id="pwStrengthLabel"></span>
+        </div>
+        <ul class="pw-rules" id="pwRules">
+          <li id="rule-len"  class="rule">At least 8 characters</li>
+          <li id="rule-upper" class="rule">One uppercase letter</li>
+          <li id="rule-num"  class="rule">One number</li>
+          <li id="rule-sym"  class="rule">One special character</li>
+        </ul>
+      </div>
       <button class="btn-primary" id="signupBtn">Create Account</button>
       <div class="auth-footer">Already have an account? <a href="#" id="goToLogin">Sign in</a></div>
     </div>

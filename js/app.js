@@ -295,6 +295,37 @@ function handleLogin() {
   navigate('dashboard');
 }
 
+/* ── Password strength meter ────────────────────── */
+function updatePasswordStrength(val) {
+  const wrap  = document.getElementById('pwStrengthWrap');
+  const fill  = document.getElementById('pwStrengthFill');
+  const label = document.getElementById('pwStrengthLabel');
+  if (!wrap) return;
+
+  const rules = {
+    len:   val.length >= 8,
+    upper: /[A-Z]/.test(val),
+    num:   /[0-9]/.test(val),
+    sym:   /[^A-Za-z0-9]/.test(val),
+  };
+
+  // Update rule indicators
+  Object.entries(rules).forEach(([key, pass]) => {
+    const el = document.getElementById(`rule-${key}`);
+    if (el) el.classList.toggle('pass', pass);
+  });
+
+  const score = Object.values(rules).filter(Boolean).length;
+  const levels = ['', 'weak', 'fair', 'good', 'strong'];
+  const colours = ['', '#ef4444', '#f59e0b', '#3b82f6', '#22c55e'];
+
+  wrap.style.display = val.length ? 'flex' : 'none';
+  fill.style.width   = `${score * 25}%`;
+  fill.style.background = colours[score] || '#ef4444';
+  label.textContent  = val.length ? (levels[score] || 'weak').toUpperCase() : '';
+  label.style.color  = colours[score] || '#ef4444';
+}
+
 function handleSignup() {
   const name  = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim().toLowerCase();
