@@ -540,7 +540,7 @@ function navigate(page) {
 
 function afterRender(page) {
   selectedEmailId = null;
-  if (page === 'dashboard')        { initDashboardChart(); initEquityChart(); initPairChart(); }
+  if (page === 'dashboard')        { initDashboardChart(); initEquityChart(); initPairChart(); initSparklines(); }
   if (page === 'exposure-reports') initExposureCharts();
   if (page === 'statements')       initSortableTable('statementsTable', () => {
     const f = document.getElementById('statementsTable')?.dataset.filter || 'all';
@@ -575,25 +575,37 @@ function renderDashboard() {
 
   <div class="stats-grid">
     <div class="stat-card accent-amber" data-nav-card="statements">
-      <div class="stat-icon">📋</div>
+      <div class="stat-top">
+        <div class="stat-icon">📋</div>
+        <canvas class="stat-spark" id="spark0" width="80" height="32"></canvas>
+      </div>
       <div class="stat-label">Pending Statements</div>
       <div class="stat-value">${pending}</div>
       <div class="stat-sub"><span class="up">↑ ${Math.max(0,pending-3)}</span> since yesterday</div>
     </div>
     <div class="stat-card accent-red" data-nav-card="repeat-accounts">
-      <div class="stat-icon">🔄</div>
+      <div class="stat-top">
+        <div class="stat-icon">🔄</div>
+        <canvas class="stat-spark" id="spark1" width="80" height="32"></canvas>
+      </div>
       <div class="stat-label">Repeat Account Requests</div>
       <div class="stat-value">${repeat}</div>
       <div class="stat-sub"><span class="down">${Math.min(repeat,2)} urgent</span> · awaiting approval</div>
     </div>
     <div class="stat-card accent-blue" data-nav-card="support-emails">
-      <div class="stat-icon">📧</div>
+      <div class="stat-top">
+        <div class="stat-icon">📧</div>
+        <canvas class="stat-spark" id="spark2" width="80" height="32"></canvas>
+      </div>
       <div class="stat-label">Unread Support Emails</div>
       <div class="stat-value">${emails}</div>
       <div class="stat-sub"><span class="up">Oldest:</span> 2 days ago</div>
     </div>
     <div class="stat-card accent-green">
-      <div class="stat-icon">✅</div>
+      <div class="stat-top">
+        <div class="stat-icon">✅</div>
+        <canvas class="stat-spark" id="spark3" width="80" height="32"></canvas>
+      </div>
       <div class="stat-label">Resolved Today</div>
       <div class="stat-value">${today || 9}</div>
       <div class="stat-sub"><span class="up">↑ 2</span> above daily avg</div>
@@ -720,6 +732,54 @@ function initDashboardChart() {
   const h = new Date().getHours();
   const gEl = document.getElementById('greeting');
   if (gEl) gEl.textContent = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+}
+
+function drawSparkline(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const step = w / (data.length - 1);
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, color + '55');
+  grad.addColorStop(1, color + '00');
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  // Fill to bottom
+  ctx.lineTo((data.length - 1) * step, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+
+function initSparklines() {
+  drawSparkline('spark0', [11,14,9,16,12,15,14], '#f59e0b');
+  drawSparkline('spark1', [5,7,4,8,6,8,7],       '#ef4444');
+  drawSparkline('spark2', [8,12,10,14,9,11,10],   '#3b82f6');
+  drawSparkline('spark3', [6,7,9,8,10,9,9],       '#22c55e');
 }
 
 function initEquityChart() {
