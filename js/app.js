@@ -49,14 +49,29 @@ function severityIcon(s) {
 }
 
 /* ── Toast ──────────────────────────────────────── */
-function showToast(message, type = 'info') {
+function showToast(message, type = 'info', undoFn = null) {
   const icons = { success: '✅', error: '❌', info: 'ℹ️' };
   const container = document.getElementById('toastContainer');
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<span>${icons[type]}</span><span>${message}</span>`;
+  toast.innerHTML = `
+    <span>${icons[type]}</span>
+    <span class="toast-msg">${message}</span>
+    ${undoFn ? `<button class="toast-undo">Undo</button>` : ''}`;
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3100);
+
+  let undone = false;
+  if (undoFn) {
+    toast.querySelector('.toast-undo').addEventListener('click', () => {
+      undone = true;
+      undoFn();
+      toast.remove();
+      showToast('Action undone.', 'info');
+    });
+  }
+
+  const timer = setTimeout(() => toast.remove(), undoFn ? 5000 : 3100);
+  toast._timer = timer;
 }
 
 /* ── Modal ──────────────────────────────────────── */
@@ -2035,43 +2050,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* ── Statement actions ── */
     if (action === 'approve-stmt') {
+      const prev = Store.get('statements').find(s => String(s.id) === id)?.status || 'pending';
       Store.update('statements', id, { status: 'approved' });
       Store.addAudit('Approved Statement', `#${id}`, 'Account statement reviewed and approved');
-      showToast(`Statement #${id} approved.`, 'success');
-      if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderStatements();
-      renderNotifications(); updateSidebarBadges(); return;
+      const rerender = () => { if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderStatements(); renderNotifications(); updateSidebarBadges(); };
+      rerender();
+      showToast(`Statement #${id} approved.`, 'success', () => {
+        Store.update('statements', id, { status: prev });
+        document.getElementById('mainContent').innerHTML = renderStatements();
+        renderNotifications(); updateSidebarBadges();
+      });
+      return;
     }
     if (action === 'reject-stmt') {
+      const prev = Store.get('statements').find(s => String(s.id) === id)?.status || 'pending';
       Store.update('statements', id, { status: 'rejected' });
       Store.addAudit('Rejected Statement', `#${id}`, 'Account statement rejected after review');
-      showToast(`Statement #${id} rejected.`, 'error');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderStatements();
-      renderNotifications(); updateSidebarBadges(); return;
+      renderNotifications(); updateSidebarBadges();
+      showToast(`Statement #${id} rejected.`, 'error', () => {
+        Store.update('statements', id, { status: prev });
+        document.getElementById('mainContent').innerHTML = renderStatements();
+        renderNotifications(); updateSidebarBadges();
+      });
+      return;
     }
 
     /* ── Repeat account actions ── */
     if (action === 'approve-repeat') {
       const r = Store.update('repeatAccounts', id, { status: 'approved' });
       Store.addAudit('Approved Repeat Account', r?.client || id, 'New account creation approved');
-      showToast(`${r?.client || id} approved.`, 'success');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
-      renderNotifications(); updateSidebarBadges(); return;
+      renderNotifications(); updateSidebarBadges();
+      showToast(`${r?.client || id} approved.`, 'success', () => {
+        Store.update('repeatAccounts', id, { status: 'pending' });
+        document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
+        renderNotifications(); updateSidebarBadges();
+      });
+      return;
     }
     if (action === 'deny-repeat') {
       const r = Store.update('repeatAccounts', id, { status: 'denied' });
       Store.addAudit('Denied Repeat Account', r?.client || id, 'New account request denied');
-      showToast(`${r?.client || id} denied.`, 'error');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
-      renderNotifications(); updateSidebarBadges(); return;
+      renderNotifications(); updateSidebarBadges();
+      showToast(`${r?.client || id} denied.`, 'error', () => {
+        Store.update('repeatAccounts', id, { status: 'pending' });
+        document.getElementById('mainContent').innerHTML = renderRepeatAccounts();
+        renderNotifications(); updateSidebarBadges();
+      });
+      return;
     }
 
     /* ── Alert actions ── */
     if (action === 'resolve-alert') {
       const a = Store.update('alerts', id, { status: 'resolved' });
       Store.addAudit('Resolved Alert', a?.title || id, 'Risk alert marked as resolved');
-      showToast('Alert marked as resolved.', 'success');
       if (close) closeModal(); else document.getElementById('mainContent').innerHTML = renderRiskAlerts();
-      renderNotifications(); updateSidebarBadges(); return;
+      renderNotifications(); updateSidebarBadges();
+      showToast('Alert marked as resolved.', 'success', () => {
+        Store.update('alerts', id, { status: 'active' });
+        document.getElementById('mainContent').innerHTML = renderRiskAlerts();
+        renderNotifications(); updateSidebarBadges();
+      });
+      return;
     }
 
     /* ── KYC actions ── */

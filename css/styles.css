@@ -1862,3 +1862,22 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
 }
 .range-tab:hover   { color: var(--text); }
 .range-tab.active  { background: var(--accent); color: #fff; }
+
+/* ── Toast undo button ────────────────────────────── */
+.toast-undo {
+  margin-left: 10px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.35);
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+  flex-shrink: 0;
+}
+.toast-undo:hover { background: rgba(255,255,255,.15); }
+.toast { display: flex; align-items: center; }
+.toast-msg { flex: 1; }
