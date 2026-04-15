@@ -650,7 +650,11 @@ function renderDashboard() {
     <div class="widget">
       <div class="widget-header">
         <h3>📈 Portfolio Equity Curve</h3>
-        <span class="pill blue">Last 30 days</span>
+        <div class="range-tabs">
+          <button class="range-tab active" data-range="7">7D</button>
+          <button class="range-tab" data-range="30">30D</button>
+          <button class="range-tab" data-range="90">90D</button>
+        </div>
       </div>
       <div class="chart-area-lg"><canvas id="equityChart"></canvas></div>
     </div>
@@ -782,28 +786,40 @@ function initSparklines() {
   drawSparkline('spark3', [6,7,9,8,10,9,9],       '#22c55e');
 }
 
-function initEquityChart() {
+/* Full 90-day equity dataset — sliced by range selection */
+const EQUITY_90 = [
+  7.60,7.63,7.58,7.66,7.70,7.67,7.74,7.71,7.79,7.76,
+  7.83,7.80,7.88,7.85,7.92,7.89,7.95,7.91,7.98,7.95,
+  8.02,7.99,8.06,8.03,8.10,8.14,8.09,8.18,8.22,8.19,
+  8.25,8.21,8.30,8.27,8.35,8.31,8.40,8.38,8.44,8.41,
+  8.50,8.46,8.53,8.49,8.57,8.54,8.61,8.58,8.65,8.63,
+  8.70,8.68,8.74,8.71,8.78,8.75,8.81,8.79,8.85,8.82,
+  8.88,8.85,8.91,8.88,8.94,8.92,8.97,8.95,9.00,8.97,
+  9.02,9.00,9.05,9.02,9.07,9.04,9.09,9.06,9.10,8.40,
+  8.45,8.42,8.48,8.45,8.51,8.49,8.54,8.51,8.57,8.40
+];
+
+function initEquityChart(days = 30) {
   if (equityChart) { equityChart.destroy(); equityChart = null; }
   const canvas = document.getElementById('equityChart');
   if (!canvas) return;
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const gc = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
   const tc = isDark ? '#94a3b8' : '#64748b';
-  // Simulate 30-day equity curve with realistic drift
-  const seed = [8.10, 8.14, 8.09, 8.18, 8.22, 8.19, 8.25, 8.21, 8.30, 8.27,
-                8.35, 8.31, 8.40, 8.38, 8.44, 8.41, 8.50, 8.46, 8.53, 8.49,
-                8.57, 8.54, 8.61, 8.58, 8.65, 8.63, 8.70, 8.68, 8.74, 8.40];
-  const labels = Array.from({ length: 30 }, (_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - (29 - i));
+
+  const slice = EQUITY_90.slice(-days);
+  const labels = Array.from({ length: days }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (days - 1 - i));
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
+
   equityChart = new Chart(canvas.getContext('2d'), {
     type: 'line',
     data: {
       labels,
       datasets: [{
         label: 'Portfolio Value ($B)',
-        data: seed,
+        data: slice,
         borderColor: '#22c55e',
         backgroundColor: (ctx) => {
           const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
@@ -811,8 +827,7 @@ function initEquityChart() {
           g.addColorStop(1, 'rgba(34,197,94,0)');
           return g;
         },
-        fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
-        borderWidth: 2
+        fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5, borderWidth: 2
       }]
     },
     options: {
@@ -823,10 +838,19 @@ function initEquityChart() {
         tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.y.toFixed(2)}B` } }
       },
       scales: {
-        x: { grid: { color: gc }, ticks: { color: tc, font: { size: 10 }, maxTicksLimit: 7 }, border: { display: false } },
+        x: { grid: { color: gc }, ticks: { color: tc, font: { size: 10 }, maxTicksLimit: days <= 7 ? 7 : 8 }, border: { display: false } },
         y: { grid: { color: gc }, ticks: { color: tc, font: { size: 10 }, callback: v => `$${v}B` }, border: { display: false }, beginAtZero: false }
       }
     }
+  });
+
+  // Wire up range tab clicks
+  document.querySelectorAll('.range-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.range-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      initEquityChart(Number(btn.dataset.range));
+    });
   });
 }
 

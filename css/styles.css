@@ -1840,3 +1840,25 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
   opacity: .85;
   margin-top: 2px;
 }
+
+/* ── Chart range tabs ─────────────────────────────── */
+.range-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface2);
+  border-radius: 8px;
+  padding: 3px;
+}
+.range-tab {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.range-tab:hover   { color: var(--text); }
+.range-tab.active  { background: var(--accent); color: #fff; }
