@@ -9,6 +9,7 @@ let activityChart   = null;
 let equityChart     = null;
 let pairChart       = null;
 let selectedEmailId = null;
+let tableSort       = { col: null, dir: 'asc' };
 let activeAvatarTab = 'color';   // 'color' | 'emoji' | 'photo'
 
 /* ── Utilities ──────────────────────────────────── */
@@ -443,6 +444,11 @@ function afterRender(page) {
   selectedEmailId = null;
   if (page === 'dashboard')        { initDashboardChart(); initEquityChart(); initPairChart(); }
   if (page === 'exposure-reports') initExposureCharts();
+  if (page === 'statements')       initSortableTable('statementsTable', () => {
+    const f = document.getElementById('statementsTable')?.dataset.filter || 'all';
+    const all = Store.get('statements');
+    return f === 'all' ? all : all.filter(s => s.status === f);
+  }, stmtRows, 'stmtCount');
   if (page === 'profile') {
     const t = currentUser?.avatarType;
     activeAvatarTab = t === 'photo' ? 'photo' : t === 'emoji' ? 'emoji' : 'color';
@@ -694,6 +700,77 @@ function initPairChart() {
 }
 
 /* ════════════════════════════════════════════════
+   TABLE SORT / SEARCH HELPERS
+   ════════════════════════════════════════════════ */
+function stmtRows(data) {
+  return data.map(s => `
+  <tr class="clickable-row" data-action="stmt-detail" data-id="${s.id}">
+    <td><div class="client-cell"><div class="mini-avatar ${s.color}">${s.initials}</div>${s.client}</div></td>
+    <td>#${s.id}</td><td>${fmt(s.balance)}</td>
+    <td>${statusPill(s.status)}</td><td>${s.submitted}</td>
+    <td>
+      ${s.status !== 'approved' && s.status !== 'rejected' ? `
+      <div class="row-actions">
+        <button class="btn-approve" data-action="approve-stmt" data-id="${s.id}">Approve</button>
+        <button class="btn-deny"    data-action="reject-stmt"  data-id="${s.id}">Reject</button>
+      </div>` : '<span class="muted-text">—</span>'}
+    </td>
+  </tr>`).join('');
+}
+
+function filterStmtTable(q) {
+  const tbody = document.getElementById('stmtTbody');
+  const countEl = document.getElementById('stmtCount');
+  if (!tbody) return;
+  const filter = document.getElementById('statementsTable')?.dataset.filter || 'all';
+  let data = Store.get('statements');
+  if (filter !== 'all') data = data.filter(s => s.status === filter);
+  if (q) data = data.filter(s => s.client.toLowerCase().includes(q.toLowerCase()) || String(s.id).includes(q));
+  if (tableSort.col) data = sortData(data, tableSort.col, tableSort.dir);
+  tbody.innerHTML = stmtRows(data);
+  if (countEl) countEl.textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
+}
+
+function sortData(data, col, dir) {
+  return [...data].sort((a, b) => {
+    let av = a[col], bv = b[col];
+    if (col === 'balance') { av = Number(av); bv = Number(bv); }
+    else if (typeof av === 'string') { av = av.toLowerCase(); bv = bv.toLowerCase(); }
+    return (dir === 'asc' ? 1 : -1) * (av > bv ? 1 : av < bv ? -1 : 0);
+  });
+}
+
+function initSortableTable(tableId, getDataFn, renderRowsFn, countElId) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  tableSort = { col: null, dir: 'asc' };
+  table.querySelectorAll('th.sortable').forEach(th => {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (tableSort.col === col) tableSort.dir = tableSort.dir === 'asc' ? 'desc' : 'asc';
+      else { tableSort.col = col; tableSort.dir = 'asc'; }
+      table.querySelectorAll('th.sortable').forEach(t => {
+        t.classList.remove('sort-asc','sort-desc');
+        t.querySelector('.sort-icon').textContent = '⇅';
+      });
+      th.classList.add(`sort-${tableSort.dir}`);
+      th.querySelector('.sort-icon').textContent = tableSort.dir === 'asc' ? '↑' : '↓';
+      const searchQ = document.getElementById('stmtSearch')?.value || '';
+      const tbody = table.querySelector('tbody');
+      let data = getDataFn();
+      if (searchQ) data = data.filter(s => s.client?.toLowerCase().includes(searchQ.toLowerCase()) || String(s.id).includes(searchQ));
+      data = sortData(data, tableSort.col, tableSort.dir);
+      tbody.innerHTML = renderRowsFn(data);
+      if (countElId) {
+        const el = document.getElementById(countElId);
+        if (el) el.textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
+      }
+    });
+  });
+}
+
+/* ════════════════════════════════════════════════
    PAGE: ACCOUNT STATEMENTS
    ════════════════════════════════════════════════ */
 function renderStatements(filter = 'all') {
@@ -714,25 +791,24 @@ function renderStatements(filter = 'all') {
     </button>`).join('')}
   </div>
   <div class="widget">
-    <table class="data-table" id="statementsTable">
-      <thead><tr><th>Client</th><th>Account ID</th><th>Balance</th><th>Status</th><th>Submitted</th><th>Actions</th></tr></thead>
-      <tbody>
-        ${shown.map(s => `
-        <tr class="clickable-row" data-action="stmt-detail" data-id="${s.id}">
-          <td><div class="client-cell"><div class="mini-avatar ${s.color}">${s.initials}</div>${s.client}</div></td>
-          <td>#${s.id}</td><td>${fmt(s.balance)}</td>
-          <td>${statusPill(s.status)}</td><td>${s.submitted}</td>
-          <td>
-            ${s.status !== 'approved' && s.status !== 'rejected' ? `
-            <div class="row-actions">
-              <button class="btn-approve" data-action="approve-stmt" data-id="${s.id}">Approve</button>
-              <button class="btn-deny"    data-action="reject-stmt"  data-id="${s.id}">Reject</button>
-            </div>` : '<span class="muted-text">—</span>'}
-          </td>
-        </tr>`).join('')}
+    <div class="table-toolbar">
+      <input type="text" class="table-search" id="stmtSearch" placeholder="🔍  Search client or account…" oninput="filterStmtTable(this.value)" />
+      <span class="table-count" id="stmtCount">${shown.length} record${shown.length !== 1 ? 's' : ''}</span>
+    </div>
+    <table class="data-table sortable-table" id="statementsTable" data-filter="${filter}">
+      <thead><tr>
+        <th class="sortable" data-sort="client">Client <span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-sort="id">Account ID <span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-sort="balance">Balance <span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-sort="status">Status <span class="sort-icon">⇅</span></th>
+        <th class="sortable" data-sort="submitted">Submitted <span class="sort-icon">⇅</span></th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody id="stmtTbody">
+        ${stmtRows(shown)}
       </tbody>
     </table>
-    ${shown.length === 0 ? '<div class="empty-state">No statements match this filter.</div>' : ''}
+    ${shown.length === 0 ? '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">No statements found</div><div class="empty-sub">Try a different filter or search term.</div></div>' : ''}
   </div>`;
 }
 
