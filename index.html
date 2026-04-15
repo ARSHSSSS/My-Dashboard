@@ -9,6 +9,12 @@
   <meta property="og:type" content="website" />
   <title>ForexGuard — Risk Management Portal</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ForexGuard" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" />
@@ -660,6 +666,67 @@ document.addEventListener('DOMContentLoaded', () => {
   initHamburger();
   initCookie();
 });
+</script>
+
+<!-- ══ PWA INSTALL BANNER ══ -->
+<div id="pwaInstallBanner" style="display:none">
+  <div class="pwa-banner-inner">
+    <span class="pwa-banner-icon">🛡️</span>
+    <div class="pwa-banner-text">
+      <strong>Install ForexGuard</strong>
+      <span>Add to home screen for offline access</span>
+    </div>
+    <button class="pwa-install-btn" id="pwaInstallBtn">Install</button>
+    <button class="pwa-dismiss-btn" id="pwaDismissBtn" aria-label="Dismiss">✕</button>
+  </div>
+</div>
+
+<script>
+/* ── Service Worker Registration ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/My-Dashboard/sw.js')
+      .then(reg => console.log('[SW] Registered, scope:', reg.scope))
+      .catch(err => console.warn('[SW] Registration failed:', err));
+  });
+}
+
+/* ── PWA Install Prompt ── */
+(function () {
+  let deferredPrompt = null;
+  const banner     = document.getElementById('pwaInstallBanner');
+  const btnInstall = document.getElementById('pwaInstallBtn');
+  const btnDismiss = document.getElementById('pwaDismissBtn');
+
+  if (sessionStorage.getItem('fg-pwa-dismissed')) return;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    banner.style.display = 'block';
+    requestAnimationFrame(() => banner.classList.add('pwa-banner-visible'));
+  });
+
+  btnInstall.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    hideBanner();
+  });
+
+  btnDismiss.addEventListener('click', () => {
+    sessionStorage.setItem('fg-pwa-dismissed', '1');
+    hideBanner();
+  });
+
+  window.addEventListener('appinstalled', () => hideBanner());
+
+  function hideBanner() {
+    banner.classList.remove('pwa-banner-visible');
+    setTimeout(() => { banner.style.display = 'none'; }, 300);
+  }
+})();
 </script>
 </body>
 </html>

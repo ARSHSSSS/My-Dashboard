@@ -1,0 +1,56 @@
+{
+  "name": "ForexGuard — Risk Management Portal",
+  "short_name": "ForexGuard",
+  "description": "Professional risk management portal for Forex agents.",
+  "start_url": "/My-Dashboard/app.html",
+  "scope": "/My-Dashboard/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#0f172a",
+  "background_color": "#0f172a",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%230f172a'/><text y='340' x='256' text-anchor='middle' font-size='320'>🛡️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://arshssss.github.io/My-Dashboard/app.html",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "label": "ForexGuard Dashboard"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Open the risk management dashboard",
+      "url": "/My-Dashboard/app.html",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Risk Alerts",
+      "short_name": "Alerts",
+      "description": "View active risk alerts",
+      "url": "/My-Dashboard/app.html#risk-alerts",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
