@@ -396,6 +396,42 @@ function initDashboard() {
 }
 
 /* ════════════════════════════════════════════════
+   SKELETON LOADER
+   ════════════════════════════════════════════════ */
+function skeletonLoader(page) {
+  const bar  = (w='100%', h='14px', r='6px') =>
+    `<div class="sk-bar" style="width:${w};height:${h};border-radius:${r}"></div>`;
+  const card = (rows=3) =>
+    `<div class="sk-card">${bar('55%','11px')}<div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">${Array(rows).fill(bar()).join('')}</div></div>`;
+
+  if (page === 'dashboard') return `
+    <div class="sk-wrap">
+      <div class="sk-header">${bar('220px','28px','8px')}${bar('340px','14px')}</div>
+      <div class="sk-stats">${Array(4).fill(`<div class="sk-stat-card">${bar('60%','10px')}${bar('40%','28px','6px')}</div>`).join('')}</div>
+      <div class="sk-two-col">${card(4)} ${card(5)}</div>
+      <div class="sk-two-col" style="margin-top:20px">${card(3)} ${card(4)}</div>
+    </div>`;
+
+  if (page === 'statements' || page === 'kyc-reviews' || page === 'risk-alerts') return `
+    <div class="sk-wrap">
+      <div class="sk-header">${bar('200px','28px','8px')}${bar('300px','14px')}</div>
+      <div class="sk-tabs">${Array(5).fill(bar('80px','32px','20px')).join('')}</div>
+      <div class="sk-card">
+        ${bar('100%','12px')}
+        ${Array(6).fill(`<div class="sk-row">${bar('28%','12px')} ${bar('15%','12px')} ${bar('18%','12px')} ${bar('12%','22px','12px')}</div>`).join('')}
+      </div>
+    </div>`;
+
+  // Generic skeleton for all other pages
+  return `
+    <div class="sk-wrap">
+      <div class="sk-header">${bar('200px','28px','8px')}${bar('300px','14px')}</div>
+      <div class="sk-stats">${Array(4).fill(`<div class="sk-stat-card">${bar('55%','10px')}${bar('45%','26px','6px')}</div>`).join('')}</div>
+      <div class="sk-two-col">${card(4)} ${card(5)}</div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════
    ROUTER
    ════════════════════════════════════════════════ */
 const PAGE_MAP = {
@@ -433,7 +469,7 @@ function navigate(page) {
 
   // Render page
   const mc = document.getElementById('mainContent');
-  mc.innerHTML = '<div class="page-loading">Loading…</div>';
+  mc.innerHTML = skeletonLoader(page);
   requestAnimationFrame(() => {
     mc.innerHTML = (PAGE_MAP[page]?.render || renderDashboard)();
     afterRender(page);
