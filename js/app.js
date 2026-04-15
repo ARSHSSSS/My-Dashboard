@@ -755,6 +755,38 @@ function initPairChart() {
 }
 
 /* ════════════════════════════════════════════════
+   CSV EXPORT
+   ════════════════════════════════════════════════ */
+function exportCSV(filename, headers, rows) {
+  const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const csv = [headers.map(esc).join(','),
+    ...rows.map(r => r.map(esc).join(','))
+  ].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showToast(`${filename} downloaded.`, 'success');
+}
+
+function exportStatements() {
+  const data = Store.get('statements');
+  exportCSV('account-statements.csv',
+    ['Account ID', 'Client', 'Balance', 'Status', 'Submitted'],
+    data.map(s => [s.id, s.client, s.balance, s.status, s.submitted])
+  );
+}
+
+function exportKyc() {
+  const data = Store.get('kyc');
+  exportCSV('kyc-reviews.csv',
+    ['Account ID', 'Client', 'Document Type', 'Expiry', 'Days Left', 'Status'],
+    data.map(k => [k.accountId, k.client, k.docType, k.expiry, k.daysLeft, k.status])
+  );
+}
+
+/* ════════════════════════════════════════════════
    TABLE SORT / SEARCH HELPERS
    ════════════════════════════════════════════════ */
 function stmtRows(data) {
@@ -849,6 +881,7 @@ function renderStatements(filter = 'all') {
     <div class="table-toolbar">
       <input type="text" class="table-search" id="stmtSearch" placeholder="🔍  Search client or account…" oninput="filterStmtTable(this.value)" />
       <span class="table-count" id="stmtCount">${shown.length} record${shown.length !== 1 ? 's' : ''}</span>
+      <button class="btn-sm export-btn" onclick="exportStatements()" title="Export to CSV">⬇ Export CSV</button>
     </div>
     <table class="data-table sortable-table" id="statementsTable" data-filter="${filter}">
       <thead><tr>
@@ -968,6 +1001,10 @@ function renderKycReviews(filter = 'all') {
     </button>`).join('')}
   </div>
   <div class="widget">
+    <div class="table-toolbar">
+      <span class="table-count">${shown.length} record${shown.length !== 1 ? 's' : ''}</span>
+      <button class="btn-sm export-btn" onclick="exportKyc()" title="Export to CSV">⬇ Export CSV</button>
+    </div>
     <table class="data-table">
       <thead><tr><th>Client</th><th>Account ID</th><th>Document Type</th><th>Expiry Date</th><th>Days Left</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>

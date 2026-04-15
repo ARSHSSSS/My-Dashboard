@@ -1685,3 +1685,18 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
   display: none;
 }
 .mbn-dot.visible { display: block; }
+
+/* Export CSV button */
+.export-btn {
+  margin-left: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.export-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
