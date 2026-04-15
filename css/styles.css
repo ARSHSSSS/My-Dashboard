@@ -1931,3 +1931,20 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
 .bulk-checkbox input:indeterminate + .bulk-box { background: var(--accent); border-color: var(--accent); }
 .bulk-checkbox input:indeterminate + .bulk-box::after { content: '—'; font-size: 9px; }
 .bulk-check-cell { padding: 0 8px !important; width: 36px; }
+
+/* ── Login history ────────────────────────────────── */
+.login-history-list { display: flex; flex-direction: column; }
+.login-hist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.login-hist-row:last-child { border-bottom: none; }
+.login-hist-row.current { background: rgba(34,197,94,.05); }
+.lh-icon { font-size: 14px; flex-shrink: 0; }
+.lh-info { flex: 1; }
+.lh-time   { font-size: 13px; font-weight: 600; color: var(--text); }
+.lh-device { font-size: 11px; color: var(--muted); margin-top: 2px; }

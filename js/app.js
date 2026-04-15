@@ -313,6 +313,11 @@ function handleLogin() {
   saveProfileData(matchedUser.email, profile);
 
   currentUser = { ...matchedUser, ...profile };
+  // Append to login history (keep last 10)
+  const history = JSON.parse(localStorage.getItem(`fg-login-history-${email}`) || '[]');
+  history.unshift({ time: new Date().toLocaleString('en-US', { dateStyle:'medium', timeStyle:'short' }), device: navigator.platform || 'Unknown' });
+  if (history.length > 10) history.pop();
+  localStorage.setItem(`fg-login-history-${email}`, JSON.stringify(history));
   const rememberMe = document.getElementById('rememberMe')?.checked;
   saveSession(currentUser, rememberMe);
   Store.addAudit('Login', currentUser.name, rememberMe ? 'Signed in (Remember Me — 30 days)' : 'Signed in via email/password');
@@ -1760,6 +1765,31 @@ function renderProfile() {
 
       </div>
     </div>
+
+    <!-- ── Login history ── -->
+    ${(() => {
+      const history = JSON.parse(localStorage.getItem(`fg-login-history-${u.email}`) || '[]');
+      return `
+    <div class="widget pref-section" style="grid-column:1/-1">
+      <div class="widget-header"><h3>🕐 Login History</h3><span class="muted-text" style="font-size:12px">Last ${Math.min(history.length, 10)} sign-ins</span></div>
+      <div class="pref-body" style="padding:0">
+        ${history.length === 0
+          ? '<div class="empty-state" style="padding:32px 0"><div class="empty-icon">🔐</div><div class="empty-title">No history yet</div><div class="empty-sub">Sign in again to start recording your login history.</div></div>'
+          : `<div class="login-history-list">
+              ${history.map((h, i) => `
+              <div class="login-hist-row ${i === 0 ? 'current' : ''}">
+                <div class="lh-icon">${i === 0 ? '🟢' : '🔵'}</div>
+                <div class="lh-info">
+                  <div class="lh-time">${h.time}</div>
+                  <div class="lh-device">${h.device}</div>
+                </div>
+                ${i === 0 ? '<span class="pill green" style="font-size:10px">This session</span>' : ''}
+              </div>`).join('')}
+             </div>`
+        }
+      </div>
+    </div>`;
+    })()}
 
     <!-- ── Change password ── -->
     <div class="widget pref-section" style="grid-column:1/-1">
