@@ -888,7 +888,7 @@ function renderRepeatAccounts(filter = 'all') {
         `<span class="status-resolved ${r.status}">${r.status === 'approved' ? '✅ Approved' : '❌ Denied'}</span>`}
       </div>
     </div>`).join('')}
-    ${shown.length === 0 ? '<div class="empty-state">No requests in this category.</div>' : ''}
+    ${shown.length === 0 ? '<div class="empty-state"><div class="empty-icon">🔄</div><div class="empty-title">No requests here</div><div class="empty-sub">There are no repeat account requests in this category.</div></div>' : ''}
   </div>`;
 }
 
@@ -925,7 +925,7 @@ function renderClientProfiles(search = '') {
         </tr>`).join('')}
       </tbody>
     </table>
-    ${shown.length === 0 ? '<div class="empty-state">No clients found.</div>' : ''}
+    ${shown.length === 0 ? '<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-title">No clients found</div><div class="empty-sub">No client profiles match your current search.</div></div>' : ''}
   </div>`;
 }
 
@@ -970,6 +970,7 @@ function renderKycReviews(filter = 'all') {
         </tr>`).join('')}
       </tbody>
     </table>
+    ${shown.length === 0 ? '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All clear in this category</div><div class="empty-sub">No KYC records match this filter right now.</div></div>' : ''}
   </div>`;
 }
 
@@ -1008,7 +1009,7 @@ function renderRiskAlerts(filter = 'all') {
         ${a.status === 'active' ? `<button class="btn-approve" data-action="resolve-alert" data-id="${a.id}">Mark Resolved</button>` : '<span class="status-resolved approved">✅ Resolved</span>'}
       </div>
     </div>`).join('')}
-    ${shown.length === 0 ? '<div class="empty-state">No alerts in this category.</div>' : ''}
+    ${shown.length === 0 ? '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">All clear!</div><div class="empty-sub">No risk alerts in this category. Keep an eye on the dashboard for new activity.</div></div>' : ''}
   </div>`;
 }
 
@@ -1097,10 +1098,10 @@ function renderAuditLogs() {
   </div>
   <div class="widget">
     ${logs.length === 0 ? `
-    <div class="empty-state" style="padding:48px 0;">
-      <div style="font-size:40px;margin-bottom:12px;">📋</div>
-      <div>No actions recorded yet.</div>
-      <div class="muted-text" style="margin-top:6px;">Actions like approvals, rejections, and logins will appear here.</div>
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">No actions recorded yet</div>
+      <div class="empty-sub">Approvals, rejections, and logins will appear here as they happen.</div>
     </div>` : `
     <div class="audit-timeline">
       ${logs.map(l => {
@@ -1215,7 +1216,7 @@ function renderTickets(filter = 'all') {
         <button class="btn-sm btn-danger" data-action="ticket-close" data-id="${t.id}">Close Ticket</button>
       </div>` : ''}
     </div>`).join('')}
-    ${shown.length === 0 ? '<div class="empty-state">No tickets in this category.</div>' : ''}
+    ${shown.length === 0 ? '<div class="empty-state"><div class="empty-icon">🎫</div><div class="empty-title">No tickets</div><div class="empty-sub">No support tickets in this category right now.</div></div>' : ''}
   </div>`;
 }
 
