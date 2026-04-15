@@ -6,6 +6,8 @@
 let currentUser     = null;
 let currentPage     = 'dashboard';
 let activityChart   = null;
+let equityChart     = null;
+let pairChart       = null;
 let selectedEmailId = null;
 let activeAvatarTab = 'color';   // 'color' | 'emoji' | 'photo'
 
@@ -81,15 +83,19 @@ function toggleTheme() {
 }
 
 function updateChartTheme() {
-  if (!activityChart) return;
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   const gc = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
   const tc = isDark ? '#94a3b8' : '#64748b';
-  activityChart.options.scales.x.ticks.color = tc;
-  activityChart.options.scales.y.ticks.color = tc;
-  activityChart.options.scales.x.grid.color  = gc;
-  activityChart.options.scales.y.grid.color  = gc;
-  activityChart.update();
+  [activityChart, equityChart].forEach(ch => {
+    if (!ch || !ch.options.scales) return;
+    if (ch.options.scales.x) { ch.options.scales.x.ticks.color = tc; ch.options.scales.x.grid.color = gc; }
+    if (ch.options.scales.y) { ch.options.scales.y.ticks.color = tc; ch.options.scales.y.grid.color = gc; }
+    ch.update();
+  });
+  if (pairChart) {
+    pairChart.options.plugins.legend.labels.color = tc;
+    pairChart.update();
+  }
 }
 
 /* ── Notifications panel ────────────────────────── */
@@ -330,6 +336,8 @@ function handleLogout() {
   localStorage.removeItem('fg-session');
   currentUser = null;
   if (activityChart) { activityChart.destroy(); activityChart = null; }
+  if (equityChart)   { equityChart.destroy();   equityChart   = null; }
+  if (pairChart)     { pairChart.destroy();     pairChart     = null; }
   document.getElementById('loginEmail').value    = '';
   document.getElementById('loginPassword').value = '';
   showScreen('login');
@@ -433,7 +441,7 @@ function navigate(page) {
 
 function afterRender(page) {
   selectedEmailId = null;
-  if (page === 'dashboard')        initDashboardChart();
+  if (page === 'dashboard')        { initDashboardChart(); initEquityChart(); initPairChart(); }
   if (page === 'exposure-reports') initExposureCharts();
   if (page === 'profile') {
     const t = currentUser?.avatarType;
@@ -522,6 +530,23 @@ function renderDashboard() {
     </div>
   </div>
 
+  <div class="charts-row">
+    <div class="widget">
+      <div class="widget-header">
+        <h3>📈 Portfolio Equity Curve</h3>
+        <span class="pill blue">Last 30 days</span>
+      </div>
+      <div class="chart-area-lg"><canvas id="equityChart"></canvas></div>
+    </div>
+    <div class="widget">
+      <div class="widget-header">
+        <h3>🌍 Exposure by Pair</h3>
+        <span class="pill blue">Live</span>
+      </div>
+      <div class="chart-area-lg chart-center"><canvas id="pairChart"></canvas></div>
+    </div>
+  </div>
+
   <div class="bottom-grid">
     <div class="widget">
       <div class="widget-header"><h3>🔄 Repeat Account Requests</h3><span class="pill red">${repeat} pending</span></div>
@@ -591,6 +616,81 @@ function initDashboardChart() {
   const h = new Date().getHours();
   const gEl = document.getElementById('greeting');
   if (gEl) gEl.textContent = h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
+}
+
+function initEquityChart() {
+  if (equityChart) { equityChart.destroy(); equityChart = null; }
+  const canvas = document.getElementById('equityChart');
+  if (!canvas) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gc = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  const tc = isDark ? '#94a3b8' : '#64748b';
+  // Simulate 30-day equity curve with realistic drift
+  const seed = [8.10, 8.14, 8.09, 8.18, 8.22, 8.19, 8.25, 8.21, 8.30, 8.27,
+                8.35, 8.31, 8.40, 8.38, 8.44, 8.41, 8.50, 8.46, 8.53, 8.49,
+                8.57, 8.54, 8.61, 8.58, 8.65, 8.63, 8.70, 8.68, 8.74, 8.40];
+  const labels = Array.from({ length: 30 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (29 - i));
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+  equityChart = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Portfolio Value ($B)',
+        data: seed,
+        borderColor: '#22c55e',
+        backgroundColor: (ctx) => {
+          const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+          g.addColorStop(0, 'rgba(34,197,94,.25)');
+          g.addColorStop(1, 'rgba(34,197,94,0)');
+          return g;
+        },
+        fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` $${ctx.parsed.y.toFixed(2)}B` } }
+      },
+      scales: {
+        x: { grid: { color: gc }, ticks: { color: tc, font: { size: 10 }, maxTicksLimit: 7 }, border: { display: false } },
+        y: { grid: { color: gc }, ticks: { color: tc, font: { size: 10 }, callback: v => `$${v}B` }, border: { display: false }, beginAtZero: false }
+      }
+    }
+  });
+}
+
+function initPairChart() {
+  if (pairChart) { pairChart.destroy(); pairChart = null; }
+  const canvas = document.getElementById('pairChart');
+  if (!canvas) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const tc = isDark ? '#94a3b8' : '#64748b';
+  pairChart = new Chart(canvas.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'Other'],
+      datasets: [{
+        data: [32, 24, 18, 12, 8, 6],
+        backgroundColor: ['#3b82f6','#6366f1','#22c55e','#f59e0b','#ef4444','#64748b'],
+        borderWidth: 0, hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { color: tc, font: { size: 11 }, padding: 12, boxWidth: 10, boxHeight: 10 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
+      },
+      cutout: '62%'
+    }
+  });
 }
 
 /* ════════════════════════════════════════════════
