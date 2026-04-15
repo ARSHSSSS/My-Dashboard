@@ -934,6 +934,9 @@ function exportKyc() {
 function stmtRows(data) {
   return data.map(s => `
   <tr class="clickable-row" data-action="stmt-detail" data-id="${s.id}">
+    <td class="bulk-check-cell" onclick="event.stopPropagation()">
+      <label class="bulk-checkbox"><input type="checkbox" class="bulk-row-check" value="${s.id}" onchange="onBulkCheckChange()"><span class="bulk-box"></span></label>
+    </td>
     <td><div class="client-cell"><div class="mini-avatar ${s.color}">${s.initials}</div>${s.client}</div></td>
     <td>#${s.id}</td><td>${fmt(s.balance)}</td>
     <td>${statusPill(s.status)}</td><td>${s.submitted}</td>
@@ -945,6 +948,53 @@ function stmtRows(data) {
       </div>` : '<span class="muted-text">—</span>'}
     </td>
   </tr>`).join('');
+}
+
+function onBulkCheckChange() {
+  const checks = [...document.querySelectorAll('.bulk-row-check')];
+  const selected = checks.filter(c => c.checked).map(c => c.value);
+  const bar = document.getElementById('bulkBar');
+  if (!bar) return;
+  if (selected.length > 0) {
+    bar.classList.add('visible');
+    document.getElementById('bulkCount').textContent = `${selected.length} selected`;
+  } else {
+    bar.classList.remove('visible');
+  }
+  // Sync select-all checkbox
+  const allCheck = document.getElementById('bulkSelectAll');
+  if (allCheck) allCheck.indeterminate = selected.length > 0 && selected.length < checks.length;
+  if (allCheck) allCheck.checked = selected.length === checks.length && checks.length > 0;
+}
+
+function bulkSelectAll(checked) {
+  document.querySelectorAll('.bulk-row-check').forEach(c => c.checked = checked);
+  onBulkCheckChange();
+}
+
+function bulkApprove() {
+  const ids = [...document.querySelectorAll('.bulk-row-check:checked')].map(c => c.value);
+  ids.forEach(id => { Store.update('statements', id, { status: 'approved' }); Store.addAudit('Approved Statement', `#${id}`, 'Bulk approved'); });
+  document.getElementById('mainContent').innerHTML = renderStatements();
+  renderNotifications(); updateSidebarBadges();
+  showToast(`${ids.length} statement${ids.length > 1 ? 's' : ''} approved.`, 'success');
+}
+
+function bulkReject() {
+  const ids = [...document.querySelectorAll('.bulk-row-check:checked')].map(c => c.value);
+  ids.forEach(id => { Store.update('statements', id, { status: 'rejected' }); Store.addAudit('Rejected Statement', `#${id}`, 'Bulk rejected'); });
+  document.getElementById('mainContent').innerHTML = renderStatements();
+  renderNotifications(); updateSidebarBadges();
+  showToast(`${ids.length} statement${ids.length > 1 ? 's' : ''} rejected.`, 'error');
+}
+
+function bulkExportSelected() {
+  const ids = new Set([...document.querySelectorAll('.bulk-row-check:checked')].map(c => c.value));
+  const data = Store.get('statements').filter(s => ids.has(String(s.id)));
+  exportCSV('selected-statements.csv',
+    ['Account ID','Client','Balance','Status','Submitted'],
+    data.map(s => [s.id, s.client, s.balance, s.status, s.submitted])
+  );
 }
 
 function filterStmtTable(q) {
@@ -1020,13 +1070,24 @@ function renderStatements(filter = 'all') {
     </button>`).join('')}
   </div>
   <div class="widget">
+    <div class="bulk-bar" id="bulkBar">
+      <span id="bulkCount">0 selected</span>
+      <button class="bulk-action-btn green"  onclick="bulkApprove()">✓ Approve All</button>
+      <button class="bulk-action-btn red"    onclick="bulkReject()">✗ Reject All</button>
+      <button class="bulk-action-btn export" onclick="bulkExportSelected()">⬇ Export Selected</button>
+      <button class="bulk-action-btn clear"  onclick="bulkSelectAll(false)">✕ Clear</button>
+    </div>
     <div class="table-toolbar">
+      <label class="bulk-checkbox" style="margin-right:4px" title="Select all">
+        <input type="checkbox" id="bulkSelectAll" onchange="bulkSelectAll(this.checked)"><span class="bulk-box"></span>
+      </label>
       <input type="text" class="table-search" id="stmtSearch" placeholder="🔍  Search client or account…" oninput="filterStmtTable(this.value)" />
       <span class="table-count" id="stmtCount">${shown.length} record${shown.length !== 1 ? 's' : ''}</span>
       <button class="btn-sm export-btn" onclick="exportStatements()" title="Export to CSV">⬇ Export CSV</button>
     </div>
     <table class="data-table sortable-table" id="statementsTable" data-filter="${filter}">
       <thead><tr>
+        <th style="width:36px"></th>
         <th class="sortable" data-sort="client">Client <span class="sort-icon">⇅</span></th>
         <th class="sortable" data-sort="id">Account ID <span class="sort-icon">⇅</span></th>
         <th class="sortable" data-sort="balance">Balance <span class="sort-icon">⇅</span></th>
