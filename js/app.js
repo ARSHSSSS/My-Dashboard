@@ -152,21 +152,31 @@ const DEMO_ACCOUNT = { name: 'Demo Agent', email: 'demo@forexguard.com', passwor
 /* ══════════════════════════════════════════════════
    SESSION (30-minute expiry)
    ══════════════════════════════════════════════════ */
-const SESSION_MS = 30 * 60 * 1000;
+const SESSION_MS      = 30 * 60 * 1000;        // 30 min
+const SESSION_LONG_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
-function saveSession(user) {
-  localStorage.setItem('fg-session', JSON.stringify({ user, expiry: Date.now() + SESSION_MS }));
+function saveSession(user, longSession) {
+  const ttl = longSession ? SESSION_LONG_MS : SESSION_MS;
+  const key = longSession ? 'fg-session-long' : 'fg-session';
+  if (longSession) localStorage.removeItem('fg-session');
+  else localStorage.removeItem('fg-session-long');
+  localStorage.setItem(key, JSON.stringify({ user, expiry: Date.now() + ttl }));
 }
 
 function loadSession() {
-  const s = JSON.parse(localStorage.getItem('fg-session') || 'null');
-  if (s && s.expiry > Date.now()) return s.user;
-  localStorage.removeItem('fg-session');
+  // Try long session first (Remember Me), then regular
+  for (const key of ['fg-session-long', 'fg-session']) {
+    const s = JSON.parse(localStorage.getItem(key) || 'null');
+    if (s && s.expiry > Date.now()) return s.user;
+    if (s) localStorage.removeItem(key);
+  }
   return null;
 }
 
 function extendSession() {
-  if (currentUser) saveSession(currentUser);
+  if (!currentUser) return;
+  const isLong = !!localStorage.getItem('fg-session-long');
+  saveSession(currentUser, isLong);
 }
 
 /* ══════════════════════════════════════════════════
@@ -288,8 +298,9 @@ function handleLogin() {
   saveProfileData(matchedUser.email, profile);
 
   currentUser = { ...matchedUser, ...profile };
-  saveSession(currentUser);
-  Store.addAudit('Login', currentUser.name, 'Signed in via email/password');
+  const rememberMe = document.getElementById('rememberMe')?.checked;
+  saveSession(currentUser, rememberMe);
+  Store.addAudit('Login', currentUser.name, rememberMe ? 'Signed in (Remember Me — 30 days)' : 'Signed in via email/password');
   initDashboard();
   showScreen('dashboard');
   navigate('dashboard');
@@ -366,6 +377,7 @@ function handleSignup() {
 function handleLogout() {
   Store.addAudit('Logout', currentUser?.name || 'Agent', 'Signed out');
   localStorage.removeItem('fg-session');
+  localStorage.removeItem('fg-session-long');
   currentUser = null;
   if (activityChart) { activityChart.destroy(); activityChart = null; }
   if (equityChart)   { equityChart.destroy();   equityChart   = null; }
