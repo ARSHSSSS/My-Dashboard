@@ -1746,13 +1746,49 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('searchOverlay').addEventListener('click', e => { if (e.target === document.getElementById('searchOverlay')) closeSearch(); });
   document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') handleSearch(e.target.value); });
 
-  /* ── Enter on auth ── */
+  /* ── Global keyboard shortcuts ── */
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeSearch(); closeModal(); document.getElementById('notifPanel').classList.remove('open'); }
+    const tag = document.activeElement?.tagName;
+    const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
+
+    // Escape — close search / modal / notif panel
+    if (e.key === 'Escape') {
+      closeSearch();
+      closeModal();
+      document.getElementById('notifPanel').classList.remove('open');
+    }
+
+    // ⌘K / Ctrl+K — open search (even from input, to keep it consistent)
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      const overlay = document.getElementById('searchOverlay');
+      if (overlay.classList.contains('open')) closeSearch();
+      else openSearch();
+      return;
+    }
+
+    // ⌘B / Ctrl+B — toggle sidebar
+    if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+      e.preventDefault();
+      const sidebar = document.querySelector('.sidebar');
+      if (sidebar) {
+        const isCollapsed = sidebar.classList.contains('collapsed');
+        sidebar.classList.toggle('collapsed', !isCollapsed);
+        document.querySelector('.main-wrap')?.classList.toggle('sidebar-collapsed', !isCollapsed);
+        localStorage.setItem('fg-sidebar-collapsed', isCollapsed ? '0' : '1');
+      }
+      return;
+    }
+
+    // Enter on auth screens
     if (e.key !== 'Enter') return;
     if (document.getElementById('loginScreen').classList.contains('active'))  handleLogin();
     if (document.getElementById('signupScreen').classList.contains('active')) handleSignup();
   });
+
+  // Show keyboard shortcut hints in tooltips
+  document.getElementById('searchBtn')?.setAttribute('title', 'Search  (⌘K)');
+  document.getElementById('sidebarToggle')?.setAttribute('title', 'Toggle sidebar  (⌘B)');
 
   /* ══════════════════════════════════════
      MAIN CONTENT EVENT DELEGATION
