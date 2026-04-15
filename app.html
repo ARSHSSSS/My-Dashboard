@@ -260,6 +260,33 @@
     <!-- Page content — rendered by JavaScript -->
     <main class="content" id="mainContent"></main>
   </div>
+
+  <!-- ══ MOBILE BOTTOM NAV ══ -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav">
+    <div class="mbn-item active" data-page="dashboard">
+      <span class="mbn-icon">📊</span>
+      <span class="mbn-label">Home</span>
+    </div>
+    <div class="mbn-item" data-page="statements">
+      <span class="mbn-icon">📋</span>
+      <span class="mbn-label">Statements</span>
+      <span class="mbn-dot" id="mbn-dot-statements"></span>
+    </div>
+    <div class="mbn-item" data-page="risk-alerts">
+      <span class="mbn-icon">⚠️</span>
+      <span class="mbn-label">Alerts</span>
+      <span class="mbn-dot" id="mbn-dot-alerts"></span>
+    </div>
+    <div class="mbn-item" data-page="support-emails">
+      <span class="mbn-icon">📧</span>
+      <span class="mbn-label">Emails</span>
+      <span class="mbn-dot" id="mbn-dot-emails"></span>
+    </div>
+    <div class="mbn-item" data-page="profile">
+      <span class="mbn-icon">👤</span>
+      <span class="mbn-label">Profile</span>
+    </div>
+  </nav>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>

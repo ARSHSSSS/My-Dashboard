@@ -367,6 +367,23 @@ function updateSidebarBadges() {
   });
 }
 
+/* ── Mobile bottom nav ──────────────────────────── */
+function updateMobileBottomNav(page) {
+  document.querySelectorAll('.mbn-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
+  });
+  // Dot indicators
+  const dotMap = {
+    'mbn-dot-statements': Store.get('statements').filter(s => s.status === 'pending').length > 0,
+    'mbn-dot-alerts':     Store.get('alerts').filter(a => a.status === 'active').length > 0,
+    'mbn-dot-emails':     Store.get('emails').filter(e => !e.read).length > 0,
+  };
+  Object.entries(dotMap).forEach(([id, show]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('visible', show);
+  });
+}
+
 /* ── Dashboard init ─────────────────────────────── */
 function initDashboard() {
   const u = currentUser;
@@ -393,6 +410,7 @@ function initDashboard() {
   applyAccentColor(Store.get('preferences')?.accentColor || 'blue');
   renderNotifications();
   updateSidebarBadges();
+  updateMobileBottomNav(currentPage);
 }
 
 /* ════════════════════════════════════════════════
@@ -466,6 +484,7 @@ function navigate(page) {
   document.querySelectorAll('.nav-link[data-page]').forEach(l => {
     l.classList.toggle('active', l.dataset.page === page);
   });
+  updateMobileBottomNav(page);
 
   // Render page
   const mc = document.getElementById('mainContent');
@@ -1664,6 +1683,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('logoutBtn').addEventListener('click', handleLogout);
   document.getElementById('goToSignup').addEventListener('click', e => { e.preventDefault(); showScreen('signup'); });
   document.getElementById('goToLogin').addEventListener('click',  e => { e.preventDefault(); showScreen('login'); });
+
+  /* ── Mobile bottom nav ── */
+  document.querySelectorAll('.mbn-item[data-page]').forEach(item => {
+    item.addEventListener('click', () => navigate(item.dataset.page));
+  });
 
   /* ── Topbar ── */
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
