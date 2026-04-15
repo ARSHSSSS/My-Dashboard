@@ -1948,3 +1948,18 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
 .lh-info { flex: 1; }
 .lh-time   { font-size: 13px; font-weight: 600; color: var(--text); }
 .lh-device { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── Page transitions ─────────────────────────────── */
+@keyframes page-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-exit {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity .12s ease, transform .12s ease;
+  pointer-events: none;
+}
+.page-enter {
+  animation: page-fade-in .22s ease forwards;
+}

@@ -549,13 +549,21 @@ function navigate(page) {
   });
   updateMobileBottomNav(page);
 
-  // Render page
+  // Render page with fade transition
   const mc = document.getElementById('mainContent');
-  mc.innerHTML = skeletonLoader(page);
-  requestAnimationFrame(() => {
-    mc.innerHTML = (PAGE_MAP[page]?.render || renderDashboard)();
-    afterRender(page);
-  });
+  mc.classList.add('page-exit');
+  setTimeout(() => {
+    mc.classList.remove('page-exit');
+    mc.innerHTML = skeletonLoader(page);
+    requestAnimationFrame(() => {
+      mc.innerHTML = (PAGE_MAP[page]?.render || renderDashboard)();
+      mc.classList.add('page-enter');
+      requestAnimationFrame(() => {
+        mc.classList.remove('page-enter');
+        afterRender(page);
+      });
+    });
+  }, 120);
 }
 
 function afterRender(page) {
