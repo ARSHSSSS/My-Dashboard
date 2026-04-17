@@ -160,6 +160,9 @@ function showScreen(name) {
   requestAnimationFrame(() => target.classList.add('visible'));
 }
 
+/* ── API base URL ───────────────────────────────── */
+const API_BASE = 'http://localhost:3001/api';
+
 /* ── Auth ───────────────────────────────────────── */
 /* ── Demo / built-in credentials ──────────────────── */
 const DEMO_ACCOUNT = { name: 'Demo Agent', email: 'demo@forexguard.com', password: 'Demo@2026' };
@@ -274,32 +277,48 @@ function applyAccentColor(colorId) {
   ].join('');
 }
 
-function handleLogin() {
+async function handleLogin() {
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass  = document.getElementById('loginPassword').value;
   const err   = document.getElementById('loginError');
+  const btn   = document.getElementById('loginBtn');
 
   if (!email || !pass) {
     err.textContent = 'Please enter your email and password.';
     err.classList.add('show'); return;
   }
 
-  /* Check demo account */
+  /* ── Demo account — no API call needed ── */
   let matchedUser = null;
   if (email === DEMO_ACCOUNT.email && pass === DEMO_ACCOUNT.password) {
-    matchedUser = { name: DEMO_ACCOUNT.name, email: DEMO_ACCOUNT.email };
+    matchedUser = { name: DEMO_ACCOUNT.name, email: DEMO_ACCOUNT.email, role: 'risk' };
   }
 
-  /* Check registered accounts */
+  /* ── Real account — call the API ── */
   if (!matchedUser) {
-    const accounts = JSON.parse(localStorage.getItem('fg-accounts') || '[]');
-    const found = accounts.find(a => a.email.toLowerCase() === email && a.password === pass);
-    if (found) matchedUser = { name: found.name, email: found.email };
-  }
-
-  if (!matchedUser) {
-    err.textContent = 'Invalid email or password. Try the demo account below.';
-    err.classList.add('show'); return;
+    btn.disabled = true;
+    btn.textContent = 'Signing in…';
+    try {
+      const res  = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        err.textContent = json.error || 'Login failed. Please try again.';
+        err.classList.add('show');
+        btn.disabled = false; btn.textContent = 'Sign In';
+        return;
+      }
+      matchedUser = { name: json.name, email, role: json.role };
+    } catch {
+      err.textContent = 'Cannot reach server. Check your connection.';
+      err.classList.add('show');
+      btn.disabled = false; btn.textContent = 'Sign In';
+      return;
+    }
+    btn.disabled = false; btn.textContent = 'Sign In';
   }
 
   err.classList.remove('show');
@@ -313,7 +332,6 @@ function handleLogin() {
   saveProfileData(matchedUser.email, profile);
 
   currentUser = { ...matchedUser, ...profile };
-  // Append to login history (keep last 10)
   const history = JSON.parse(localStorage.getItem(`fg-login-history-${email}`) || '[]');
   history.unshift({ time: new Date().toLocaleString('en-US', { dateStyle:'medium', timeStyle:'short' }), device: navigator.platform || 'Unknown' });
   if (history.length > 10) history.pop();
@@ -357,13 +375,15 @@ function updatePasswordStrength(val) {
   label.style.color  = colours[score] || '#ef4444';
 }
 
-function handleSignup() {
+async function handleSignup() {
   const name  = document.getElementById('signupName').value.trim();
   const email = document.getElementById('signupEmail').value.trim().toLowerCase();
   const pass  = document.getElementById('signupPassword').value;
+  const role  = document.getElementById('signupRole')?.value;
   const err   = document.getElementById('signupError');
+  const btn   = document.getElementById('signupBtn');
 
-  if (!name || !email || !pass) {
+  if (!name || !email || !pass || !role) {
     err.textContent = 'Please fill in all fields.';
     err.classList.add('show'); return;
   }
@@ -372,22 +392,37 @@ function handleSignup() {
     err.classList.add('show'); return;
   }
 
-  /* Prevent duplicate emails */
-  const accounts = JSON.parse(localStorage.getItem('fg-accounts') || '[]');
-  if (email === DEMO_ACCOUNT.email || accounts.find(a => a.email.toLowerCase() === email)) {
-    err.textContent = 'An account with this email already exists.';
-    err.classList.add('show'); return;
+  btn.disabled = true;
+  btn.textContent = 'Creating account…';
+
+  try {
+    const res  = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password: pass, role }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      err.textContent = json.error || 'Registration failed. Please try again.';
+      err.classList.add('show');
+      btn.disabled = false; btn.textContent = 'Create Account';
+      return;
+    }
+  } catch {
+    err.textContent = 'Cannot reach server. Check your connection.';
+    err.classList.add('show');
+    btn.disabled = false; btn.textContent = 'Create Account';
+    return;
   }
 
-  accounts.push({ name, email, password: pass });
-  localStorage.setItem('fg-accounts', JSON.stringify(accounts));
-
+  btn.disabled = false; btn.textContent = 'Create Account';
   err.classList.remove('show');
+
   const now = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   saveProfileData(email, { joinedDate: now, loginCount: 1, lastActive: now });
-  currentUser = { name, email, joinedDate: now, loginCount: 1, lastActive: now };
+  currentUser = { name, email, role, joinedDate: now, loginCount: 1, lastActive: now };
   saveSession(currentUser);
-  Store.addAudit('Signup', name, 'Created new agent account');
+  Store.addAudit('Signup', name, 'Created new agent account via API');
   initDashboard();
   showScreen('dashboard');
   navigate('dashboard');
@@ -521,6 +556,7 @@ const PAGE_MAP = {
   'repeat-accounts':{ label: 'Repeat Accounts',     render: renderRepeatAccounts },
   'client-profiles':{ label: 'Client Profiles',     render: renderClientProfiles },
   'kyc-reviews':    { label: 'KYC Reviews',         render: renderKycReviews },
+  'forex-accounts': { label: 'Forex Accounts',      render: renderForexAccounts },
   'risk-alerts':    { label: 'Risk Alerts',         render: renderRiskAlerts },
   'exposure-reports':{ label: 'Exposure Reports',   render: renderExposureReports },
   'audit-logs':     { label: 'Audit Logs',          render: renderAuditLogs },
@@ -579,6 +615,7 @@ function afterRender(page) {
     const t = currentUser?.avatarType;
     activeAvatarTab = t === 'photo' ? 'photo' : t === 'emoji' ? 'emoji' : 'color';
   }
+  if (page === 'forex-accounts') loadForexAccounts();
 }
 
 /* ════════════════════════════════════════════════
@@ -1624,6 +1661,202 @@ function renderPreferences() {
 }
 
 /* ════════════════════════════════════════════════
+   PAGE: FOREX ACCOUNTS
+   ════════════════════════════════════════════════ */
+function renderForexAccounts() {
+  return `
+    <div class="page-header">
+      <div>
+        <h1>Forex Accounts</h1>
+        <p class="page-sub">Manage all client trading accounts</p>
+      </div>
+      <button class="btn-primary" data-action="fx-add">+ Add New Account</button>
+    </div>
+    <div id="fxApiError" class="error-msg" style="margin-bottom:16px;display:none;"></div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div id="fxTableWrap" style="overflow-x:auto;">
+        <div style="padding:48px;text-align:center;color:var(--muted);">Loading accounts…</div>
+      </div>
+    </div>`;
+}
+
+async function loadForexAccounts() {
+  const wrap = document.getElementById('fxTableWrap');
+  const errEl = document.getElementById('fxApiError');
+  if (!wrap) return;
+
+  try {
+    const res  = await fetch(`${API_BASE}/forex-accounts`);
+    const json = await res.json();
+
+    if (!res.ok) {
+      showFxError(json.message || 'Failed to load accounts.');
+      wrap.innerHTML = '<div style="padding:48px;text-align:center;color:var(--muted);">Could not load accounts.</div>';
+      return;
+    }
+
+    const accounts = json.data;
+
+    if (!accounts.length) {
+      wrap.innerHTML = `
+        <div style="padding:64px;text-align:center;">
+          <div style="font-size:40px;margin-bottom:12px;">💱</div>
+          <div style="font-weight:600;margin-bottom:6px;">No accounts yet</div>
+          <div style="color:var(--muted);font-size:14px;">Click "Add New Account" to create the first one.</div>
+        </div>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <table class="data-table" id="fxTable">
+        <thead>
+          <tr>
+            <th>Account ID</th>
+            <th>Client</th>
+            <th>Country</th>
+            <th>Balance</th>
+            <th>Status</th>
+            <th>KYC</th>
+            <th>Statement</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${accounts.map(a => `
+            <tr>
+              <td><span style="font-family:monospace;font-size:13px;">${a.id}</span></td>
+              <td>
+                <div style="font-weight:600;">${a.clientName}</div>
+                <div style="font-size:12px;color:var(--muted);">${a.email}</div>
+              </td>
+              <td>${a.country || '—'}</td>
+              <td style="font-weight:600;">$${Number(a.balance).toLocaleString()}</td>
+              <td>${fxPill(a.status, { active:'green', flagged:'red', suspended:'red' })}</td>
+              <td>${fxPill(a.kycStatus, { valid:'green', expiring:'amber', expired:'red' })}</td>
+              <td>${a.statementStatus ? fxPill(a.statementStatus, { pending:'amber', 'in-review':'blue', approved:'green', flagged:'red', rejected:'red' }) : '<span style="color:var(--muted)">—</span>'}</td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn-sm btn-ghost" data-action="fx-edit" data-id="${a.id}" title="Edit">✏️</button>
+                  <button class="btn-sm btn-danger" data-action="fx-delete" data-id="${a.id}" data-name="${a.clientName}" title="Delete">🗑️</button>
+                </div>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  } catch {
+    showFxError('Cannot reach server. Make sure the backend is running.');
+    wrap.innerHTML = '<div style="padding:48px;text-align:center;color:var(--muted);">Could not connect to server.</div>';
+  }
+}
+
+function fxPill(value, colorMap) {
+  const color = colorMap[value] || 'blue';
+  return `<span class="pill ${color}">${value.replace('-', ' ')}</span>`;
+}
+
+function showFxError(msg) {
+  const el = document.getElementById('fxApiError');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.classList.add('show');
+}
+
+function clearFxError() {
+  const el = document.getElementById('fxApiError');
+  if (el) { el.style.display = 'none'; el.classList.remove('show'); }
+}
+
+function openFxAddModal() {
+  openModal('Add New Account', `
+    <div id="fxFormError" class="error-msg" style="margin-bottom:12px;"></div>
+    <div class="pref-field"><label>Account ID <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="fxId" placeholder="e.g. FX-00500" /></div>
+    <div class="pref-field"><label>Client Name <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="fxClientName" placeholder="Full name" /></div>
+    <div class="pref-field"><label>Email <span style="color:var(--danger)">*</span></label>
+      <input type="email" id="fxEmail" placeholder="client@email.com" /></div>
+    <div class="pref-field"><label>Phone</label>
+      <input type="text" id="fxPhone" placeholder="+44 7911 000000" /></div>
+    <div class="pref-field"><label>Country</label>
+      <input type="text" id="fxCountry" placeholder="e.g. Germany" /></div>
+    <div class="pref-field"><label>Balance ($)</label>
+      <input type="number" id="fxBalance" placeholder="0" min="0" /></div>
+    <div class="pref-field"><label>Currency Pair</label>
+      <input type="text" id="fxCurrencyPair" placeholder="e.g. EUR/USD" /></div>
+    <div class="pref-field"><label>Account Status</label>
+      <select id="fxStatus">
+        <option value="active">Active</option>
+        <option value="flagged">Flagged</option>
+        <option value="suspended">Suspended</option>
+      </select></div>
+    <div class="pref-field"><label>KYC Status</label>
+      <select id="fxKycStatus">
+        <option value="valid">Valid</option>
+        <option value="expiring">Expiring</option>
+        <option value="expired">Expired</option>
+      </select></div>
+    <div class="pref-field"><label>Statement Status</label>
+      <select id="fxStatementStatus">
+        <option value="">— None —</option>
+        <option value="pending">Pending</option>
+        <option value="in-review">In Review</option>
+        <option value="approved">Approved</option>
+        <option value="flagged">Flagged</option>
+        <option value="rejected">Rejected</option>
+      </select></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-action="fx-cancel">Cancel</button>
+      <button class="btn-primary" data-action="fx-save-new">Save Account</button>
+    </div>`);
+}
+
+function openFxEditModal(account) {
+  openModal('Edit Account', `
+    <div id="fxFormError" class="error-msg" style="margin-bottom:12px;"></div>
+    <input type="hidden" id="fxEditId" value="${account.id}" />
+    <div class="pref-field"><label>Account ID</label>
+      <input type="text" value="${account.id}" disabled style="opacity:.5;" /></div>
+    <div class="pref-field"><label>Client Name</label>
+      <input type="text" id="fxClientName" value="${account.clientName}" /></div>
+    <div class="pref-field"><label>Email</label>
+      <input type="email" id="fxEmail" value="${account.email}" /></div>
+    <div class="pref-field"><label>Phone</label>
+      <input type="text" id="fxPhone" value="${account.phone || ''}" /></div>
+    <div class="pref-field"><label>Country</label>
+      <input type="text" id="fxCountry" value="${account.country || ''}" /></div>
+    <div class="pref-field"><label>Balance ($)</label>
+      <input type="number" id="fxBalance" value="${account.balance}" min="0" /></div>
+    <div class="pref-field"><label>Currency Pair</label>
+      <input type="text" id="fxCurrencyPair" value="${account.currencyPair || ''}" /></div>
+    <div class="pref-field"><label>Account Status</label>
+      <select id="fxStatus">
+        <option value="active"    ${account.status === 'active'    ? 'selected' : ''}>Active</option>
+        <option value="flagged"   ${account.status === 'flagged'   ? 'selected' : ''}>Flagged</option>
+        <option value="suspended" ${account.status === 'suspended' ? 'selected' : ''}>Suspended</option>
+      </select></div>
+    <div class="pref-field"><label>KYC Status</label>
+      <select id="fxKycStatus">
+        <option value="valid"     ${account.kycStatus === 'valid'    ? 'selected' : ''}>Valid</option>
+        <option value="expiring"  ${account.kycStatus === 'expiring' ? 'selected' : ''}>Expiring</option>
+        <option value="expired"   ${account.kycStatus === 'expired'  ? 'selected' : ''}>Expired</option>
+      </select></div>
+    <div class="pref-field"><label>Statement Status</label>
+      <select id="fxStatementStatus">
+        <option value=""          ${!account.statementStatus                      ? 'selected' : ''}>— None —</option>
+        <option value="pending"   ${account.statementStatus === 'pending'         ? 'selected' : ''}>Pending</option>
+        <option value="in-review" ${account.statementStatus === 'in-review'       ? 'selected' : ''}>In Review</option>
+        <option value="approved"  ${account.statementStatus === 'approved'        ? 'selected' : ''}>Approved</option>
+        <option value="flagged"   ${account.statementStatus === 'flagged'         ? 'selected' : ''}>Flagged</option>
+        <option value="rejected"  ${account.statementStatus === 'rejected'        ? 'selected' : ''}>Rejected</option>
+      </select></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" data-action="fx-cancel">Cancel</button>
+      <button class="btn-primary" data-action="fx-save-edit">Save Changes</button>
+    </div>`);
+}
+
+/* ════════════════════════════════════════════════
    PAGE: MY PROFILE
    ════════════════════════════════════════════════ */
 function renderProfile() {
@@ -2245,6 +2478,147 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (action === 'new-ticket') { openNewTicketModal(); return; }
+
+    /* ── Forex Accounts CRUD ── */
+    if (action === 'fx-add')    { openFxAddModal(); return; }
+    if (action === 'fx-cancel') { closeModal(); return; }
+
+    if (action === 'fx-save-new') {
+      const fxId            = document.getElementById('fxId')?.value.trim();
+      const fxClientName    = document.getElementById('fxClientName')?.value.trim();
+      const fxEmail         = document.getElementById('fxEmail')?.value.trim();
+      const fxPhone         = document.getElementById('fxPhone')?.value.trim();
+      const fxCountry       = document.getElementById('fxCountry')?.value.trim();
+      const fxBalance       = document.getElementById('fxBalance')?.value;
+      const fxCurrencyPair  = document.getElementById('fxCurrencyPair')?.value.trim();
+      const fxStatus        = document.getElementById('fxStatus')?.value;
+      const fxKycStatus     = document.getElementById('fxKycStatus')?.value;
+      const fxStatementStatus = document.getElementById('fxStatementStatus')?.value;
+      const formErr         = document.getElementById('fxFormError');
+
+      if (!fxId || !fxClientName || !fxEmail) {
+        formErr.textContent = 'Account ID, Client Name, and Email are required.';
+        formErr.classList.add('show'); return;
+      }
+
+      (async () => {
+        const saveBtn = document.querySelector('[data-action="fx-save-new"]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try {
+          const res  = await fetch(`${API_BASE}/forex-accounts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: fxId, clientName: fxClientName, email: fxEmail,
+              phone: fxPhone || null, country: fxCountry || null,
+              balance: fxBalance ? parseFloat(fxBalance) : 0,
+              currencyPair: fxCurrencyPair || null,
+              status: fxStatus, kycStatus: fxKycStatus,
+              statementStatus: fxStatementStatus || null,
+            }),
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            formErr.textContent = json.message || 'Failed to save account.';
+            formErr.classList.add('show');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save Account';
+            return;
+          }
+          closeModal();
+          showToast(`Account ${fxId} created.`, 'success');
+          loadForexAccounts();
+        } catch {
+          formErr.textContent = 'Cannot reach server.';
+          formErr.classList.add('show');
+          saveBtn.disabled = false; saveBtn.textContent = 'Save Account';
+        }
+      })();
+      return;
+    }
+
+    if (action === 'fx-edit') {
+      (async () => {
+        try {
+          const res  = await fetch(`${API_BASE}/forex-accounts`);
+          const json = await res.json();
+          const account = json.data?.find(a => a.id === id);
+          if (!account) { showToast('Account not found.', 'error'); return; }
+          openFxEditModal(account);
+        } catch {
+          showToast('Cannot reach server.', 'error');
+        }
+      })();
+      return;
+    }
+
+    if (action === 'fx-save-edit') {
+      const editId          = document.getElementById('fxEditId')?.value;
+      const fxClientName    = document.getElementById('fxClientName')?.value.trim();
+      const fxEmail         = document.getElementById('fxEmail')?.value.trim();
+      const fxPhone         = document.getElementById('fxPhone')?.value.trim();
+      const fxCountry       = document.getElementById('fxCountry')?.value.trim();
+      const fxBalance       = document.getElementById('fxBalance')?.value;
+      const fxCurrencyPair  = document.getElementById('fxCurrencyPair')?.value.trim();
+      const fxStatus        = document.getElementById('fxStatus')?.value;
+      const fxKycStatus     = document.getElementById('fxKycStatus')?.value;
+      const fxStatementStatus = document.getElementById('fxStatementStatus')?.value;
+      const formErr         = document.getElementById('fxFormError');
+
+      (async () => {
+        const saveBtn = document.querySelector('[data-action="fx-save-edit"]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try {
+          const res  = await fetch(`${API_BASE}/forex-accounts/${editId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientName: fxClientName, email: fxEmail,
+              phone: fxPhone || null, country: fxCountry || null,
+              balance: fxBalance ? parseFloat(fxBalance) : 0,
+              currencyPair: fxCurrencyPair || null,
+              status: fxStatus, kycStatus: fxKycStatus,
+              statementStatus: fxStatementStatus || null,
+            }),
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            formErr.textContent = json.message || 'Failed to update account.';
+            formErr.classList.add('show');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
+            return;
+          }
+          closeModal();
+          showToast(`Account ${editId} updated.`, 'success');
+          loadForexAccounts();
+        } catch {
+          formErr.textContent = 'Cannot reach server.';
+          formErr.classList.add('show');
+          saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
+        }
+      })();
+      return;
+    }
+
+    if (action === 'fx-delete') {
+      const clientName = btn.dataset.name || id;
+      if (!confirm(`Delete account ${id} (${clientName})?\n\nThis cannot be undone.`)) return;
+      (async () => {
+        try {
+          const res  = await fetch(`${API_BASE}/forex-accounts/${id}`, { method: 'DELETE' });
+          const json = await res.json();
+          if (!res.ok) {
+            showFxError(json.message || 'Failed to delete account.');
+            return;
+          }
+          clearFxError();
+          showToast(`Account ${id} deleted.`, 'success');
+          loadForexAccounts();
+        } catch {
+          showFxError('Cannot reach server.');
+        }
+      })();
+      return;
+    }
 
     /* ── Email actions ── */
     if (action === 'select-email') {

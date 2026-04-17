@@ -176,6 +176,16 @@
       <div class="field"><label>Full name</label><input type="text" id="signupName" placeholder="Alex Johnson" /></div>
       <div class="field"><label>Email address</label><input type="email" id="signupEmail" placeholder="agent@forexguard.com" /></div>
       <div class="field">
+        <label>Role</label>
+        <select id="signupRole" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;">
+          <option value="">Select your role…</option>
+          <option value="risk">Risk Management</option>
+          <option value="support">Support Agent</option>
+          <option value="sales">Sales</option>
+          <option value="finance">Finance</option>
+        </select>
+      </div>
+      <div class="field">
         <label>Password</label>
         <input type="password" id="signupPassword" placeholder="Create a strong password" oninput="updatePasswordStrength(this.value)" />
         <div class="pw-strength-wrap" id="pwStrengthWrap" style="display:none">
@@ -216,6 +226,7 @@
       <div class="nav-link" data-page="repeat-accounts"><span class="icon">🔄</span> Repeat Accounts <span class="badge">7</span></div>
       <div class="nav-link" data-page="client-profiles"><span class="icon">👤</span> Client Profiles</div>
       <div class="nav-link" data-page="kyc-reviews"><span class="icon">✅</span> KYC Reviews <span class="badge amber">3</span></div>
+      <div class="nav-link" data-page="forex-accounts"><span class="icon">💱</span> Forex Accounts</div>
 
       <div class="nav-section-label">Risk</div>
       <div class="nav-link" data-page="risk-alerts"><span class="icon">⚠️</span> Risk Alerts <span class="badge">2</span></div>
