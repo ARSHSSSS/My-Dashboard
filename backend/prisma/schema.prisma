@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  passwordHash  String?
+  role          String?        // support, sales, finance, risk
+  createdAt     DateTime       @default(now())
+
+  assignedAccounts ForexAccount[] @relation("AssignedAgent")
+}
+
+model ForexAccount {
+  id                    String    @id               // e.g. FX-00412
+  clientName            String
+  email                 String    @unique
+  phone                 String?
+  country               String?
+  balance               Float     @default(0)
+  currencyPair          String?
+
+  // Account status
+  status                String    @default("active") // active, flagged, suspended
+
+  // KYC
+  kycStatus             String    @default("valid")  // valid, expiring, expired
+  kycDocType            String?
+  kycExpiry             DateTime?
+
+  // Statement
+  statementStatus       String?                      // pending, flagged, in-review, approved, rejected
+  statementSubmittedAt  DateTime?
+
+  // Repeat account
+  repeatOf              String?                      // previous account ID e.g. FX-00188
+  repeatReason          String?                      // no-bonus policy, account reset, duplicate claim
+
+  // Assigned agent
+  assignedAgentId       Int?
+  assignedAgent         User?     @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+
+  joinedAt              DateTime  @default(now())
+  createdAt             DateTime  @default(now())
+}
