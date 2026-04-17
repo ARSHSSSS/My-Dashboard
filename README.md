@@ -42,35 +42,38 @@ ForexGuard gives compliance and risk agents a single command centre to:
 
 ```
 My-Dashboard/
-├── index.html              # Landing / marketing page
-├── app.html                # SPA shell — all screens (login, signup, dashboard)
-├── css/
-│   ├── styles.css          # Dashboard styles
-│   └── landing.css         # Landing page styles
-├── js/
-│   ├── app.js              # SPA logic (router, pages, auth, events)
-│   ├── data.js             # Seed data + localStorage Store wrapper
-│   └── i18n.js             # English / Persian translations
+├── frontend/
+│   ├── index.html          # Landing / marketing page
+│   ├── app.html            # SPA shell — all screens (login, signup, dashboard)
+│   ├── css/
+│   │   ├── styles.css      # Dashboard styles
+│   │   └── landing.css     # Landing page styles
+│   ├── js/
+│   │   ├── app.js          # SPA logic (router, pages, auth, events)
+│   │   ├── data.js         # Seed data + localStorage Store wrapper
+│   │   └── i18n.js         # English / Persian translations
+│   ├── icons/
+│   ├── manifest.json       # PWA manifest
+│   └── sw.js               # Service worker (offline cache)
 ├── backend/
-│   ├── server.js           # Express app entry point
+│   ├── index.js            # Express app entry point
 │   ├── .env                # Local credentials (gitignored — never committed)
 │   ├── .env.example        # Placeholder env vars for teammates
 │   ├── .gitignore
 │   ├── package.json
 │   ├── controllers/
-│   │   ├── authController.js        # Register / Login logic
+│   │   ├── authController.js         # Register / Login logic
 │   │   ├── forexAccountController.js # Forex Accounts CRUD
 │   │   └── userController.js
 │   ├── routes/
 │   │   ├── auth.js
 │   │   ├── forexAccounts.js
 │   │   └── users.js
+│   ├── models/             # Reserved for future model helpers
 │   └── prisma/
-│       ├── schema.prisma            # Data models (User, ForexAccount)
-│       └── migrations/              # SQL migration history (committed)
-├── icons/
-├── manifest.json           # PWA manifest
-├── sw.js                   # Service worker (offline cache)
+│       ├── schema.prisma   # Data models (User, ForexAccount)
+│       └── migrations/     # SQL migration history (committed)
+├── .gitignore
 └── README.md
 ```
 
@@ -119,14 +122,14 @@ The API will be available at `http://localhost:3001`.
 
 ### 3. Open the frontend
 
-No build step required — open `index.html` directly in your browser:
+No build step required — open `frontend/index.html` directly in your browser:
 
 ```bash
-open index.html        # macOS
-# or just double-click index.html in Finder
+open frontend/index.html        # macOS
+# or just double-click index.html inside the frontend/ folder
 ```
 
-The frontend expects the backend at `http://localhost:3001/api` (configured via `API_BASE` in `js/app.js`).
+The frontend expects the backend at `http://localhost:3001/api` (configured via `API_BASE` in `frontend/js/app.js`).
 
 ---
 
