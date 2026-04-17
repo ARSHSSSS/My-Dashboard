@@ -1,6 +1,18 @@
 # macOS
 .DS_Store
 
+# Node
+node_modules/
+
+# Environment variables — never commit real credentials
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
 # GitHub CLI download (not part of the project)
 gh_2.89.0_macOS_amd64/
 

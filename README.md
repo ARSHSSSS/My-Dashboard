@@ -1,194 +1,22 @@
 # ForexGuard — Risk Management Portal
 
-A fully functional, client-side single-page application (SPA) for Forex risk management agents. Built with vanilla HTML, CSS, and JavaScript — no frameworks, no build tools, no backend required.
+A risk management dashboard for Forex brokerage agents. The frontend is a vanilla HTML/CSS/JS SPA; the backend is a Node.js + Express REST API backed by PostgreSQL via Prisma ORM.
 
-**Live demo:** https://arshssss.github.io/My-Dashboard/
-
----
-
-## Screens
-
-| Screen | URL |
-|--------|-----|
-| Home (landing page) | `/` or `/index.html` |
-| Login / Sign Up | `/app.html` |
-| Dashboard (all 12 pages) | `/app.html` (after login) |
-
-**Demo credentials:** `demo@forexguard.com` / `Demo@2026`
+**Live demo (frontend only):** https://arshssss.github.io/My-Dashboard/
 
 ---
 
-## Project Structure
+## What it does
 
-```
-My-Dashboard/
-├── index.html          # Home — marketing landing page (GitHub Pages default)
-├── app.html            # SPA shell — all screens, sidebar, topbar, modal
-├── css/
-│   ├── styles.css      # Dashboard styles (layout, components, theming)
-│   └── landing.css     # Landing page styles
-├── js/
-│   ├── data.js         # Seed data + Store class (localStorage wrapper)
-│   └── app.js          # All SPA logic (router, pages, auth, events)
-├── LICENSE
-└── README.md
-```
+ForexGuard gives compliance and risk agents a single command centre to:
 
----
-
-## Features
-
-### Authentication & Session
-- **Login** — validates credentials against a hardcoded demo account or any registered account stored in `localStorage`
-- **Sign Up** — registers name, email, and password; duplicate-email check; minimum 6-character password
-- **30-minute session** — after logging in, refreshing the page restores the session automatically; any navigation resets the idle timer
-- **Demo account hint** — credentials displayed on the login screen for easy onboarding
-- **Enter key support** — submits whichever auth form is active
-
-### User Profile & Avatar
-- **My Profile page** — dedicated page showing a hero card with login count, total actions, member-since date, and last-active date
-- **Edit info** — update display name and email directly from the profile page
-- **Avatar picker** — choose from 8 colour gradient presets (Indigo, Blue, Violet, Emerald, Rose, Amber, Cyan, Pink) or 12 emoji options (🦁 🐯 🦊 🐺 🦅 🐉 🦄 🌊 ⚡ 🔥 🎯 🛡️)
-- **Auto-assigned colour** — on first login, a unique gradient is assigned based on a hash of the user's name
-- **Avatar colour theme** — the active navigation highlight colour matches the user's chosen avatar colour across the whole sidebar
-- **Change password** — validates old password before updating; disabled for the demo account
-- **Profile dropdown** — clicking the topbar avatar opens a popover menu (My Profile, Preferences, Sign Out)
-
-### Navigation
-- **Client-side router** — `navigate(page)` renders pages into `#mainContent` without any page reload
-- **12 pages:** Dashboard, Account Statements, Repeat Accounts, Client Profiles, KYC Reviews, Risk Alerts, Exposure Reports, Audit Logs, Support Emails, Tickets, Preferences, My Profile
-- **Live sidebar badges** — counts update immediately whenever a case is approved, resolved, or closed
-- **Keyboard shortcut** — `Escape` closes any open modal, search overlay, or panel
-
-### Dashboard
-- Personalised greeting (`Good morning/afternoon/evening, [Name]`)
-- 4 stat cards with live counts from the data store
-- 7-day activity bar chart (Chart.js) with dark/light theme support
-- Quick-action buttons for common agent tasks
-- Recent statements table and inbox preview widgets
-
-### Account Statements
-- Full table with filter tabs: All / Pending / Flagged / Approved
-- Click any row to open a detail modal
-- Approve or Reject directly from the modal or inline
-
-### Repeat Accounts
-- Cards with filter tabs: All / Pending / Approved / Denied
-- Approve / Deny actions with instant Store update and audit log entry
-
-### Client Profiles
-- Live search — filters the table as you type
-- Click any row for a full detail modal (email, phone, balance, KYC status, currency pair, join date)
-
-### KYC Reviews
-- Colour-coded status pills: Valid / Expiring / Expired
-- Renew and Notify actions per document
-
-### Risk Alerts
-- Filter tabs: All / Active / Resolved
-- Full-detail modal with severity header and Resolve action
-- Resolved alerts disappear from the notification bell (but remain visible on this page)
-
-### Exposure Reports
-- Line chart (open exposure over time) and doughnut chart (currency pair breakdown) via Chart.js
-- Summary table of top currency exposures
-
-### Audit Logs
-- Timeline view of every agent action (approvals, logins, password changes, etc.)
-- Last 150 entries kept in `localStorage`
-
-### Support Emails
-- Split-panel layout: email list on the left, reading pane on the right
-- Compose and Reply modals
-- Unread count updates the sidebar badge and notification bell in real time
-
-### Tickets
-- Filter tabs: All / Open / In Progress / Closed
-- Detail modal with status transitions (Open → In Progress → Closed)
-- Create New Ticket modal
-
-### Notifications (Bell)
-- Shows up to 5 active alerts + 3 unread emails
-- Clicking an item dismisses it from the panel and navigates to the relevant page
-- **Clear All** marks all active alerts as panel-dismissed and all emails as read instantly
-- Bell dot disappears when there are no pending notifications
-
-### Preferences
-- Theme switcher (dark / light) with toggle button in the topbar
-- Per-key notification toggles (Risk Alerts, KYC Expiry, Repeat Accounts, New Emails, System Updates)
-- Reset demo data — restores all Store data to its original seed state
-
-### Search
-- Global search overlay (`Ctrl/Cmd + K` or click 🔍)
-- Filters client profiles by name, email, or country
-
----
-
-## Data Layer (`js/data.js`)
-
-All data is stored in `localStorage` under `fg-*` keys. On first load, seed data is written automatically.
-
-```
-fg-statements       — 12 account statements
-fg-repeatAccounts   — 7 repeat account requests
-fg-clients          — 10 client profiles
-fg-kyc              — 7 KYC records
-fg-alerts           — 6 risk alerts
-fg-emails           — 6 support emails
-fg-tickets          — 7 support tickets
-fg-audit            — agent action log (last 150 entries)
-fg-preferences      — notification toggles + theme
-fg-accounts         — registered user credentials
-fg-profile-{email}  — per-user avatar, login count, join date
-fg-session          — active session with 30-min expiry timestamp
-```
-
-### Store API
-
-| Method | Description |
-|--------|-------------|
-| `Store.get(key)` | Read array from localStorage (seeds on first access) |
-| `Store.set(key, data)` | Write array to localStorage |
-| `Store.update(key, id, changes)` | Find record by `id`, merge changes, save |
-| `Store.addAudit(action, target, detail)` | Prepend to audit log, keep last 150 |
-| `Store.reset()` | Remove all `fg-*` keys (resets to seed data on next read) |
-
----
-
-## Key Functions (`js/app.js`)
-
-| Function | Description |
-|----------|-------------|
-| `navigate(page)` | Client-side router — renders a page and updates the sidebar |
-| `showScreen(name)` | Switches between `login`, `signup`, and `dashboard` screens |
-| `handleLogin()` | Validates credentials, loads profile data, saves session |
-| `handleSignup()` | Registers a new account, saves credentials and profile |
-| `handleLogout()` | Clears session and returns to the login screen |
-| `initDashboard()` | Updates topbar avatar, name, colour theme, badges |
-| `updateSidebarBadges()` | Recomputes all sidebar badge counts from the Store |
-| `renderNotifications()` | Rebuilds the bell panel from live Store data |
-| `applyUserColor(user)` | Injects a `<style>` tag to theme the nav with the user's avatar colour |
-| `saveSession(user)` | Writes session + 30-min expiry to localStorage |
-| `loadSession()` | Returns the saved user if the session is still valid |
-| `renderProfile()` | Renders the My Profile page (hero card, avatar picker, password change) |
-| `renderDashboard()` | Renders the main dashboard with charts and widgets |
-| `openModal(title, html)` | Opens the shared modal with given content |
-| `showToast(message, type)` | Shows a transient toast notification (success / error / info) |
-| `applyTheme(theme)` | Applies dark/light theme and updates chart colours |
-
----
-
-## How to Run Locally
-
-No installation or build step required.
-
-```bash
-git clone https://github.com/ARSHSSSS/My-Dashboard.git
-cd My-Dashboard
-open index.html   # opens the landing page
-```
-
-Or just double-click `index.html` in Finder.
+- Review and approve/reject **account statements**
+- Monitor **risk alerts** (margin calls, abnormal withdrawals)
+- Track **KYC document** expiry and renewals
+- Manage **repeat account** requests
+- Handle **support emails** and **tickets**
+- Manage **client trading accounts** (Forex Accounts CRUD)
+- View an **audit log** of every agent action
 
 ---
 
@@ -196,19 +24,198 @@ Or just double-click `index.html` in Finder.
 
 | Layer | Technology |
 |-------|-----------|
-| Markup | HTML5 (semantic) |
-| Styles | CSS3 — custom properties, Grid, Flexbox, `@keyframes` |
-| Logic | Vanilla JavaScript (ES2020) — no frameworks |
-| Charts | [Chart.js 4.4.3](https://www.chartjs.org/) via CDN |
-| Storage | `localStorage` — all data persisted client-side |
-| Hosting | GitHub Pages |
+| Frontend markup | HTML5 |
+| Frontend styles | CSS3 — custom properties, Grid, Flexbox |
+| Frontend logic | Vanilla JavaScript (ES2020) — no frameworks |
+| Charts | Chart.js 4.4.3 (CDN) |
+| Local data | `localStorage` (seed data for demo) |
+| Backend runtime | Node.js |
+| Backend framework | Express |
+| ORM & migrations | Prisma |
+| Database | PostgreSQL |
+| Password hashing | bcrypt |
+| Hosting (frontend) | GitHub Pages |
+
+---
+
+## Project Structure
+
+```
+My-Dashboard/
+├── index.html              # Landing / marketing page
+├── app.html                # SPA shell — all screens (login, signup, dashboard)
+├── css/
+│   ├── styles.css          # Dashboard styles
+│   └── landing.css         # Landing page styles
+├── js/
+│   ├── app.js              # SPA logic (router, pages, auth, events)
+│   ├── data.js             # Seed data + localStorage Store wrapper
+│   └── i18n.js             # English / Persian translations
+├── backend/
+│   ├── server.js           # Express app entry point
+│   ├── .env                # Local credentials (gitignored — never committed)
+│   ├── .env.example        # Placeholder env vars for teammates
+│   ├── .gitignore
+│   ├── package.json
+│   ├── controllers/
+│   │   ├── authController.js        # Register / Login logic
+│   │   ├── forexAccountController.js # Forex Accounts CRUD
+│   │   └── userController.js
+│   ├── routes/
+│   │   ├── auth.js
+│   │   ├── forexAccounts.js
+│   │   └── users.js
+│   └── prisma/
+│       ├── schema.prisma            # Data models (User, ForexAccount)
+│       └── migrations/              # SQL migration history (committed)
+├── icons/
+├── manifest.json           # PWA manifest
+├── sw.js                   # Service worker (offline cache)
+└── README.md
+```
+
+---
+
+## How to Run Locally
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) v18 or later
+- [PostgreSQL](https://www.postgresql.org/) running locally
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/ARSHSSSS/My-Dashboard.git
+cd My-Dashboard
+```
+
+### 2. Set up the backend
+
+```bash
+cd backend
+
+# Copy the example env file and fill in your credentials
+cp .env.example .env
+# Edit .env — replace USER and PASSWORD with your PostgreSQL credentials
+```
+
+Install dependencies and run migrations:
+
+```bash
+npm install
+npx prisma migrate dev
+```
+
+Start the server:
+
+```bash
+npm run dev      # development (nodemon — auto-restarts on save)
+# or
+npm start        # production
+```
+
+The API will be available at `http://localhost:3001`.
+
+### 3. Open the frontend
+
+No build step required — open `index.html` directly in your browser:
+
+```bash
+open index.html        # macOS
+# or just double-click index.html in Finder
+```
+
+The frontend expects the backend at `http://localhost:3001/api` (configured via `API_BASE` in `js/app.js`).
+
+---
+
+## Environment Variables
+
+Copy `backend/.env.example` to `backend/.env` and fill in your values:
+
+```
+DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/dashboard_db"
+PORT=3001
+```
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `PORT` | Port the Express server listens on (default: 3001) |
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/register` | Register a new agent (name, email, password, role) |
+| `POST` | `/api/auth/login` | Log in — returns name and role |
+| `GET` | `/api/forex-accounts` | List all Forex accounts |
+| `POST` | `/api/forex-accounts` | Create a new account |
+| `PUT` | `/api/forex-accounts/:id` | Update an account |
+| `DELETE` | `/api/forex-accounts/:id` | Delete an account |
+
+All endpoints return `{ success, data, message }`.
+
+---
+
+## Database Models
+
+### `User`
+Agent accounts (staff who log in to the portal).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | Int (PK) | Auto-increment |
+| name | String | Required |
+| email | String | Unique, required |
+| passwordHash | String? | bcrypt hash |
+| role | String? | `risk`, `support`, `sales`, `finance` |
+| createdAt | DateTime | Auto |
+
+### `ForexAccount`
+Client trading accounts managed by agents.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | String (PK) | e.g. `FX-00412` |
+| clientName | String | Required |
+| email | String | Unique, required |
+| phone | String? | |
+| country | String? | |
+| balance | Float | Default 0 |
+| currencyPair | String? | e.g. `EUR/USD` |
+| status | String | `active`, `flagged`, `suspended` |
+| kycStatus | String | `valid`, `expiring`, `expired` |
+| kycDocType | String? | |
+| kycExpiry | DateTime? | |
+| statementStatus | String? | `pending`, `in-review`, `approved`, `flagged`, `rejected` |
+| statementSubmittedAt | DateTime? | |
+| repeatOf | String? | Previous account ID if repeat |
+| repeatReason | String? | |
+| assignedAgentId | Int? | FK → User |
+| joinedAt | DateTime | |
+| createdAt | DateTime | Auto |
+
+---
+
+## Demo Account
+
+A built-in demo account is available on the login screen (no backend required):
+
+- **Email:** `demo@forexguard.com`
+- **Password:** `Demo@2026`
+
+The demo account uses `localStorage` only and does not call the API.
 
 ---
 
 ## Notes for Developers
 
-- **No backend** — auth, data, and sessions are entirely client-side. Do not use in production without a real backend.
-- **Adding real auth** — replace `handleLogin()` / `handleSignup()` with API calls and store a JWT or session token server-side.
-- **Adding real data** — replace `Store.get()` seed reads with `fetch()` calls to your REST or GraphQL API.
-- **Extending pages** — add an entry to `PAGE_MAP` in `app.js` and a matching `render*()` function; the router picks it up automatically.
-- **Avatar persistence** — avatar preferences are stored under `fg-profile-{email}` so they survive re-login and are independent of credentials.
+- **API base URL** — The frontend reads from `API_BASE` in `js/app.js` (`http://localhost:3001/api`). Change this constant if your backend runs on a different port or host.
+- **Migrations** — Prisma migration `.sql` files are committed to git so any teammate can run `npx prisma migrate dev` to reproduce the exact database schema.
+- **`.env` is gitignored** — Never commit real credentials. Use `.env.example` to communicate which variables are needed.
+- **Adding pages** — Add an entry to `PAGE_MAP` in `js/app.js` with a `render*()` function; the router picks it up automatically.
+- **Extending the API** — Add a controller in `backend/controllers/`, a route file in `backend/routes/`, and register it in `backend/server.js`.
