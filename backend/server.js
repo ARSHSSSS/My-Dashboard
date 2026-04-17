@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const userRoutes = require('./routes/users');
 const authRoutes = require('./routes/auth');
+const forexAccountRoutes = require('./routes/forexAccounts');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -14,6 +15,7 @@ app.use(express.json());
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/forex-accounts', forexAccountRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
