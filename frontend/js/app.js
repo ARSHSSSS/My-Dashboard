@@ -2821,6 +2821,110 @@ document.addEventListener('DOMContentLoaded', () => {
       closeModal();
       navigate('tickets'); return;
     }
+
+    /* ── Forex Accounts modal actions ── */
+    if (action === 'fx-cancel') { closeModal(); return; }
+
+    if (action === 'fx-save-new') {
+      const fxId              = document.getElementById('fxId')?.value.trim();
+      const fxClientName      = document.getElementById('fxClientName')?.value.trim();
+      const fxEmail           = document.getElementById('fxEmail')?.value.trim();
+      const fxPhone           = document.getElementById('fxPhone')?.value.trim();
+      const fxCountry         = document.getElementById('fxCountry')?.value.trim();
+      const fxBalance         = document.getElementById('fxBalance')?.value;
+      const fxCurrencyPair    = document.getElementById('fxCurrencyPair')?.value.trim();
+      const fxStatus          = document.getElementById('fxStatus')?.value;
+      const fxKycStatus       = document.getElementById('fxKycStatus')?.value;
+      const fxStatementStatus = document.getElementById('fxStatementStatus')?.value;
+      const formErr           = document.getElementById('fxFormError');
+
+      if (!fxId || !fxClientName || !fxEmail) {
+        formErr.textContent = 'Account ID, Client Name, and Email are required.';
+        formErr.classList.add('show'); return;
+      }
+
+      (async () => {
+        const saveBtn = document.querySelector('[data-action="fx-save-new"]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try {
+          const res  = await fetch(`${API_BASE}/forex-accounts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: fxId, clientName: fxClientName, email: fxEmail,
+              phone: fxPhone || null, country: fxCountry || null,
+              balance: fxBalance ? parseFloat(fxBalance) : 0,
+              currencyPair: fxCurrencyPair || null,
+              status: fxStatus, kycStatus: fxKycStatus,
+              statementStatus: fxStatementStatus || null,
+            }),
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            formErr.textContent = json.message || 'Failed to save account.';
+            formErr.classList.add('show');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save Account';
+            return;
+          }
+          closeModal();
+          showToast(`Account ${fxId} created.`, 'success');
+          loadForexAccounts();
+        } catch {
+          formErr.textContent = 'Cannot reach server. Make sure the backend is running.';
+          formErr.classList.add('show');
+          saveBtn.disabled = false; saveBtn.textContent = 'Save Account';
+        }
+      })();
+      return;
+    }
+
+    if (action === 'fx-save-edit') {
+      const editId            = document.getElementById('fxEditId')?.value;
+      const fxClientName      = document.getElementById('fxClientName')?.value.trim();
+      const fxEmail           = document.getElementById('fxEmail')?.value.trim();
+      const fxPhone           = document.getElementById('fxPhone')?.value.trim();
+      const fxCountry         = document.getElementById('fxCountry')?.value.trim();
+      const fxBalance         = document.getElementById('fxBalance')?.value;
+      const fxCurrencyPair    = document.getElementById('fxCurrencyPair')?.value.trim();
+      const fxStatus          = document.getElementById('fxStatus')?.value;
+      const fxKycStatus       = document.getElementById('fxKycStatus')?.value;
+      const fxStatementStatus = document.getElementById('fxStatementStatus')?.value;
+      const formErr           = document.getElementById('fxFormError');
+
+      (async () => {
+        const saveBtn = document.querySelector('[data-action="fx-save-edit"]');
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        try {
+          const res  = await fetch(`${API_BASE}/forex-accounts/${editId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              clientName: fxClientName, email: fxEmail,
+              phone: fxPhone || null, country: fxCountry || null,
+              balance: fxBalance ? parseFloat(fxBalance) : 0,
+              currencyPair: fxCurrencyPair || null,
+              status: fxStatus, kycStatus: fxKycStatus,
+              statementStatus: fxStatementStatus || null,
+            }),
+          });
+          const json = await res.json();
+          if (!res.ok) {
+            formErr.textContent = json.message || 'Failed to update account.';
+            formErr.classList.add('show');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
+            return;
+          }
+          closeModal();
+          showToast(`Account ${editId} updated.`, 'success');
+          loadForexAccounts();
+        } catch {
+          formErr.textContent = 'Cannot reach server. Make sure the backend is running.';
+          formErr.classList.add('show');
+          saveBtn.disabled = false; saveBtn.textContent = 'Save Changes';
+        }
+      })();
+      return;
+    }
   });
 
   /* ── mainContent change events ── */
