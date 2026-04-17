@@ -2,7 +2,7 @@
 
 A risk management dashboard for Forex brokerage agents. The frontend is a vanilla HTML/CSS/JS SPA; the backend is a Node.js + Express REST API backed by PostgreSQL via Prisma ORM.
 
-**Live demo (frontend only):** https://arshssss.github.io/My-Dashboard/
+**Live demo (frontend only):** https://arshssss.github.io/My-Dashboard/frontend/index.html
 
 ---
 
