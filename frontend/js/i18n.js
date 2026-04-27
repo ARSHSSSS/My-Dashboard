@@ -15,10 +15,10 @@ const TRANSLATIONS = {
     nav_getstarted:      'Get Started Free',
 
     /* Hero */
-    hero_badge:          '🚀 Trusted by 500+ Forex brokers worldwide',
-    hero_h1_line1:       'Risk management',
-    hero_h1_line2:       'built for Forex',
-    hero_desc:           'Stop juggling spreadsheets and email chains. ForexGuard gives your compliance team a single command centre for account statements, risk alerts, KYC reviews, and client support.',
+    hero_badge:          '🛡️ Purpose-built for Forex compliance teams',
+    hero_h1_line1:       'Catch risky accounts',
+    hero_h1_line2:       'before they cost you',
+    hero_desc:           'Stop losing hours to spreadsheets and missed KYC deadlines. ForexGuard gives your compliance team one place to catch margin risks, manage KYC renewals, and review statements — before problems escalate.',
     hero_cta_primary:    'Get Started Free',
     hero_cta_secondary:  'See How It Works',
     hero_meta_1:         '✓ No credit card required',
@@ -58,8 +58,8 @@ const TRANSLATIONS = {
 
     /* How it works */
     hiw_badge:           'How it works',
-    hiw_h2:              'Up and running in minutes',
-    hiw_sub:             'No lengthy onboarding. No dedicated IT team required.',
+    hiw_h2:              'Set up in minutes, not months',
+    hiw_sub:             'No IT team. No lengthy setup. Your first alert fires in under 5 minutes.',
     step1_title:         'Connect your accounts',
     step1_desc:          'Link your brokerage platform via API or upload account data directly. ForexGuard ingests client and transaction data automatically.',
     step2_title:         'Set your risk thresholds',
@@ -106,7 +106,7 @@ const TRANSLATIONS = {
     plan2_f4:            '✓ Up to 10 agent seats',
     plan2_f5:            '✓ Exposure reports & PDF export',
     plan2_f6:            '✓ Priority support',
-    plan2_cta:           'Start Free Trial',
+    plan2_cta:           'Start Free Trial →',
     plan3_name:          'Enterprise',
     plan3_price:         'Custom',
     plan3_desc:          'For large brokers with custom compliance and data requirements.',
@@ -135,8 +135,8 @@ const TRANSLATIONS = {
     faq_6_a:             'Yes. Since all data remains in your browser and is never transmitted to third-party servers, ForexGuard inherently satisfies GDPR data residency and privacy requirements.',
 
     /* CTA Banner */
-    cta_h2:              'Start managing risk today',
-    cta_sub:             'Join 500+ brokers who use ForexGuard to stay ahead of compliance failures.',
+    cta_h2:              'Stop reacting to compliance failures. Start preventing them.',
+    cta_sub:             'Join 500+ Forex brokers who replaced spreadsheets with ForexGuard.',
     cta_primary:         'Get Started Free',
     cta_secondary:       'Sign In →',
 

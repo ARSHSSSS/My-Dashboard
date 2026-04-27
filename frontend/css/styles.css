@@ -1653,9 +1653,28 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
 }
 @media (max-width: 720px) {
   .mobile-bottom-nav { display: flex; }
-  .content { padding-bottom: 76px; }   /* make room for the bar */
-  .sidebar  { display: none !important; } /* sidebar hidden on mobile, use bottom nav */
+  .sidebar  { display: none !important; }
   .main-wrap { margin-left: 0 !important; }
+
+  /* Tighter padding on small screens */
+  .content { padding: 16px 12px 76px; }
+  .topbar  { padding: 0 16px; }
+
+  /* Hide avatar text label — icon only */
+  .avatar-info { display: none; }
+
+  /* Tables scroll horizontally inside their widget */
+  .data-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Table toolbar wraps on small screens */
+  .table-toolbar { flex-wrap: wrap; gap: 8px; }
+  .table-count   { margin-left: 0; }
+
+  /* Filter tabs wrap */
+  .filter-tabs { flex-wrap: wrap; }
+
+  /* Modal gets a margin so it doesn't touch screen edges */
+  .modal-box { margin: 16px; max-width: calc(100% - 32px); }
 }
 .mbn-item {
   flex: 1;
@@ -1705,21 +1724,22 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
    PRINT / PDF STYLES
    ══════════════════════════════════════════════════════ */
 @media print {
-  /* Hide everything except the main content */
+  /* Hide chrome — only content prints */
   .sidebar, .topbar, .mobile-bottom-nav, .notif-panel,
   #searchOverlay, #modal, #toastContainer,
   .export-btn, .filter-tabs, .page-header button,
   .sidebar-overlay { display: none !important; }
 
   .main-wrap { margin-left: 0 !important; }
-  .content   { padding: 0 !important; }
+  .content   { padding: 16px !important; }
 
   body, html {
     background: #fff !important;
     color: #111 !important;
+    font-size: 12px !important;
   }
 
-  /* Make cards white with a border */
+  /* Cards white with border */
   .stat-card, .widget {
     background: #fff !important;
     border: 1px solid #e2e8f0 !important;
@@ -1732,19 +1752,38 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
   .data-table thead { background: #f1f5f9 !important; }
   .muted-text, .stat-sub, .stat-label { color: #64748b !important; }
 
-  /* Print title */
+  /* Canvas charts go blank in print — hide them and show a note */
+  canvas { display: none !important; }
+  .widget:has(canvas) .widget-body::after,
+  .widget:has(canvas)::after {
+    content: '[ Chart — open in browser to view ]';
+    display: block;
+    padding: 20px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 11px;
+    font-style: italic;
+  }
+
+  /* Report header: company name + date */
   .content::before {
     content: "ForexGuard — Exposure Report  ·  " attr(data-print-date);
     display: block;
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #1e293b;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
     font-family: system-ui, sans-serif;
   }
 
   /* Page breaks */
   .stats-grid   { break-inside: avoid; }
   .widgets-grid { break-inside: avoid; }
+
+  /* Stat cards in a row for print */
+  .stats-grid { grid-template-columns: repeat(4, 1fr) !important; }
 }
 
 /* ══════════════════════════════════════════════════════

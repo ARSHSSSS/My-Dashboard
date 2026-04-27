@@ -1376,6 +1376,11 @@ function renderExposureReports() {
 }
 
 function printExposureReport() {
+  const content = document.querySelector('.content');
+  if (content) {
+    const d = new Date();
+    content.setAttribute('data-print-date', d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
+  }
   window.print();
 }
 
