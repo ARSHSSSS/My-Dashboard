@@ -2220,7 +2220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showScreen('dashboard');
     navigate('dashboard');
   } else {
-    showScreen('login');
+    showScreen(location.hash === '#signup' ? 'signup' : 'login');
   }
 
   /* ── Auth ── */
