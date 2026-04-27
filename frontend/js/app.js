@@ -1476,7 +1476,7 @@ function renderSupportEmails() {
     <h1>Support Emails</h1>
     <p>Manage client support correspondence.</p>
   </div>
-  <div class="email-split">
+  <div class="email-split ${active ? 'email-open' : ''}">
     <div class="email-sidebar-panel">
       <div class="email-panel-header">
         <span>${emails.filter(e=>!e.read).length} unread</span>
@@ -1499,6 +1499,7 @@ function renderSupportEmails() {
     <div class="email-content-panel">
       ${active ? `
       <div class="email-view">
+        <button class="email-back-btn" data-action="email-back">← Back to Inbox</button>
         <div class="email-view-header">
           <h3>${active.subject}</h3>
           <div class="email-view-meta">From: <strong>${active.from}</strong>${active.accountId ? ' · #' + active.accountId : ''} · ${active.time}</div>
@@ -1526,7 +1527,7 @@ function renderTickets(filter = 'all') {
   const shown = filter === 'all' ? all : all.filter(t => t.status === filter);
 
   return `
-  <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;">
+  <div class="page-header-row">
     <div>
       <h1>Tickets</h1>
       <p>Track and resolve client support tickets.</p>
@@ -2640,6 +2641,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const dot = e.target.closest('.email-item')?.querySelector('.email-dot');
       if (dot) dot.classList.add('invisible');
       renderNotifications(); updateSidebarBadges(); return;
+    }
+    if (action === 'email-back') {
+      selectedEmailId = null;
+      document.getElementById('mainContent').innerHTML = renderSupportEmails();
+      return;
     }
     if (action === 'compose-email') { openComposeModal(); return; }
     if (action === 'reply-email')   { openReplyModal(id); return; }
