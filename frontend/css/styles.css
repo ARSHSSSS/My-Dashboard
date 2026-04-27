@@ -1672,10 +1672,10 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
 @media (max-width: 720px) {
   .mobile-bottom-nav { display: flex; }
   .sidebar  { display: none !important; }
-  .main-wrap { margin-left: 0 !important; }
+  .main-wrap { margin-left: 0 !important; min-width: 0; overflow-x: hidden; }
 
   /* Tighter padding on small screens */
-  .content { padding: 16px 12px 76px; }
+  .content { padding: 16px 12px 76px; min-width: 0; }
   .topbar  { padding: 0 16px; }
 
   /* Hide avatar text label — icon only */
@@ -1700,12 +1700,19 @@ th.sort-asc .sort-icon, th.sort-desc .sort-icon { opacity: 1; }
   /* Page header with action button: stack vertically */
   .page-header-row { flex-direction: column; }
 
-  /* Email split: show only one panel at a time */
-  .email-split { grid-template-columns: 1fr; min-height: unset; }
-  .email-sidebar-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 260px; }
+  /* Email split: show only one panel at a time, fill screen height */
+  .email-split { grid-template-columns: 1fr; min-height: calc(100dvh - 230px); }
+  .email-sidebar-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: none; }
   .email-split.email-open .email-sidebar-panel { display: none; }
   .email-split:not(.email-open) .email-content-panel { display: none; }
   .email-back-btn { display: flex; }
+
+  /* Hide sidebar toggle — bottom nav handles navigation on mobile */
+  .sidebar-toggle { display: none; }
+  .sidebar-overlay { display: none !important; }
+
+  /* Profile page: stack Edit Info + Avatar panels vertically */
+  .profile-grid { grid-template-columns: 1fr; }
 }
 .mbn-item {
   flex: 1;

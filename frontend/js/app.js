@@ -1671,7 +1671,7 @@ function renderPreferences() {
    ════════════════════════════════════════════════ */
 function renderForexAccounts() {
   return `
-    <div class="page-header">
+    <div class="page-header page-header-row">
       <div>
         <h1>Forex Accounts</h1>
         <p class="page-sub">Manage all client trading accounts</p>
