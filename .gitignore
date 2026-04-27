@@ -3,9 +3,17 @@
 
 # Node
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
 
 # Environment variables — never commit real credentials
 .env
+.env.local
+.env.*.local
+.env.production
+.env.development
 
 # Python
 __pycache__/
@@ -16,5 +24,11 @@ venv/
 # GitHub CLI download (not part of the project)
 gh_2.89.0_macOS_amd64/
 
+# SSL / secrets
+*.pem
+*.key
+*.cert
+
 # Claude Code internals
 .claude/
+.mcp.json
