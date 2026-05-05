@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="ForexGuard" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="stylesheet" href="css/styles.css?v=15" />
+  <link rel="stylesheet" href="css/styles.css?v=16" />
 </head>
 <body>
 
@@ -67,7 +67,7 @@
       <div class="fc-sub">Expires Dec 2026</div>
     </div>
     <div class="float-card fc-3">
-      <div class="fc-stat-num">2.4<span style="font-size:.55em;opacity:.6">M</span></div>
+      <div class="fc-stat-num">2.4<span class="fc-stat-unit">M</span></div>
       <div class="fc-stat-label">Accounts Monitored</div>
       <div class="fc-stat-trend">↑ 12% this month</div>
     </div>
@@ -144,7 +144,7 @@
       <div class="fc-sub">Expires Dec 2026</div>
     </div>
     <div class="float-card fc-3">
-      <div class="fc-stat-num">2.4<span style="font-size:.55em;opacity:.6">M</span></div>
+      <div class="fc-stat-num">2.4<span class="fc-stat-unit">M</span></div>
       <div class="fc-stat-label">Accounts Monitored</div>
       <div class="fc-stat-trend">↑ 12% this month</div>
     </div>
@@ -177,7 +177,7 @@
       <div class="field"><label>Email address</label><input type="email" id="signupEmail" placeholder="agent@forexguard.com" /></div>
       <div class="field">
         <label>Role</label>
-        <select id="signupRole" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;">
+        <select id="signupRole" class="select-field">
           <option value="">Select your role…</option>
           <option value="risk">Risk Management</option>
           <option value="support">Support Agent</option>
@@ -259,7 +259,7 @@
       </div>
       <div class="topbar-actions">
         <div class="topbar-icon-btn" id="searchBtn" title="Search">🔍</div>
-        <div class="topbar-icon-btn" id="notifBtn" title="Notifications" style="position:relative;">
+        <div class="topbar-icon-btn notif-btn" id="notifBtn" title="Notifications">
           🔔<span class="notif-dot"></span>
         </div>
         <button class="topbar-icon-btn theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>

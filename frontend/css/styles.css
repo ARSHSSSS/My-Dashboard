@@ -183,6 +183,7 @@ button { cursor: pointer; border: none; outline: none; }
   color: #fff; letter-spacing: -1.5px;
   line-height: 1; margin-bottom: 6px;
 }
+.fc-stat-unit { font-size: .55em; opacity: .6; }
 .fc-stat-label { font-size: 11px; color: rgba(255,255,255,.4); margin-bottom: 5px; }
 .fc-stat-trend { font-size: 11px; color: #86efac; font-weight: 600; }
 
@@ -359,23 +360,6 @@ button { cursor: pointer; border: none; outline: none; }
 }
 .auth-card .field input::placeholder { color: rgba(255,255,255,.2); opacity: 1; }
 
-/* Footer / demo / error inside card */
-.auth-footer           { text-align: center; margin-top: 22px; font-size: 13px; color: rgba(255,255,255,.35); }
-.auth-footer a         { color: #818cf8; font-weight: 500; }
-.auth-footer a:hover   { text-decoration: underline; }
-
-.demo-hint {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  margin-top: 16px; padding: 10px 14px; border-radius: 10px;
-  background: rgba(99,102,241,.1); border: 1px dashed rgba(99,102,241,.3);
-  font-size: 12px; color: rgba(255,255,255,.4); text-align: center;
-}
-.demo-hint .demo-label {
-  font-size: 10px; font-weight: 700; letter-spacing: .08em;
-  text-transform: uppercase; color: #818cf8;
-}
-.demo-hint strong { color: rgba(255,255,255,.75); font-weight: 600; }
-
 /* Responsive */
 @media (max-width: 480px) {
   .auth-wrap { padding: 16px; }
@@ -397,6 +381,7 @@ button { cursor: pointer; border: none; outline: none; }
 }
 .field input:focus { border-color: var(--accent); outline: none; }
 .field input::placeholder { color: var(--muted); opacity: 0.5; }
+.select-field { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 14px; }
 
 .btn-primary {
   width: 100%;
@@ -412,6 +397,7 @@ button { cursor: pointer; border: none; outline: none; }
 .btn-primary:hover { opacity: .9; }
 .btn-primary:active { transform: scale(.99); }
 
+/* Footer / demo / error inside card */
 .auth-footer { text-align: center; margin-top: 22px; font-size: 13px; color: var(--muted); }
 .auth-footer a { color: var(--accent); font-weight: 500; }
 .auth-footer a:hover { text-decoration: underline; }
@@ -619,6 +605,7 @@ button { cursor: pointer; border: none; outline: none; }
   transition: border-color .2s, background 0.3s;
 }
 .topbar-icon-btn:hover { border-color: var(--accent); color: var(--text); }
+.notif-btn { position: relative; }
 .notif-dot {
   position: absolute;
   top: 6px; right: 6px;
