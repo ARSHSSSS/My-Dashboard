@@ -15,33 +15,14 @@ let activeAvatarTab = 'color';   // 'color' | 'emoji' | 'photo'
 /* ── Utilities ──────────────────────────────────── */
 const fmt = n => '$' + Number(n).toLocaleString('en-US');
 
-function statusPill(s) {
-  const map = {
-    pending:     'amber',
-    flagged:     'red',
-    'in-review': 'blue',
-    approved:    'green',
-    rejected:    'red',
-    active:      'green',
-    suspended:   'red',
-  };
-  return `<span class="pill ${map[s] || 'blue'}">${s.replace('-', ' ')}</span>`;
+function makePill(value, map) {
+  return `<span class="pill ${map[value] || 'blue'}">${value.replace('-', ' ')}</span>`;
 }
 
-function kycPill(s) {
-  const map = { valid: 'green', expiring: 'amber', expired: 'red' };
-  return `<span class="pill ${map[s] || 'blue'}">${s}</span>`;
-}
-
-function priorityPill(p) {
-  const map = { high: 'red', medium: 'amber', low: 'blue' };
-  return `<span class="pill ${map[p] || 'blue'}">${p}</span>`;
-}
-
-function ticketStatusPill(s) {
-  const map = { open: 'amber', 'in-progress': 'blue', closed: 'green' };
-  return `<span class="pill ${map[s] || 'blue'}">${s.replace('-', ' ')}</span>`;
-}
+const statusPill       = s => makePill(s, { pending: 'amber', flagged: 'red', 'in-review': 'blue', approved: 'green', rejected: 'red', active: 'green', suspended: 'red' });
+const kycPill          = s => makePill(s, { valid: 'green', expiring: 'amber', expired: 'red' });
+const priorityPill     = p => makePill(p, { high: 'red', medium: 'amber', low: 'blue' });
+const ticketStatusPill = s => makePill(s, { open: 'amber', 'in-progress': 'blue', closed: 'green' });
 
 function severityIcon(s) {
   const map = { red: 'alert-icon red', amber: 'alert-icon amber', blue: 'alert-icon blue', green: 'alert-icon green' };
@@ -345,10 +326,14 @@ async function handleLogin() {
 }
 
 /* ── Password strength meter ────────────────────── */
+let _pwWrap, _pwFill, _pwLabel;
 function updatePasswordStrength(val) {
-  const wrap  = document.getElementById('pwStrengthWrap');
-  const fill  = document.getElementById('pwStrengthFill');
-  const label = document.getElementById('pwStrengthLabel');
+  if (!_pwWrap) {
+    _pwWrap  = document.getElementById('pwStrengthWrap');
+    _pwFill  = document.getElementById('pwStrengthFill');
+    _pwLabel = document.getElementById('pwStrengthLabel');
+  }
+  const wrap = _pwWrap, fill = _pwFill, label = _pwLabel;
   if (!wrap) return;
 
   const rules = {
@@ -445,13 +430,20 @@ function handleLogout() {
 
 /* ── Sidebar badge counts ────────────────────────── */
 function updateSidebarBadges() {
+  const statements = Store.get('statements');
+  const repeats    = Store.get('repeatAccounts');
+  const kyc        = Store.get('kyc');
+  const alerts     = Store.get('alerts');
+  const emails     = Store.get('emails');
+  const tickets    = Store.get('tickets');
+
   const counts = {
-    'statements':      { n: Store.get('statements').filter(s => s.status === 'pending').length,      cls: 'amber' },
-    'repeat-accounts': { n: Store.get('repeatAccounts').filter(r => r.status === 'pending').length,  cls: '' },
-    'kyc-reviews':     { n: Store.get('kyc').filter(k => k.status !== 'valid').length,              cls: 'amber' },
-    'risk-alerts':     { n: Store.get('alerts').filter(a => a.status === 'active').length,           cls: '' },
-    'support-emails':  { n: Store.get('emails').filter(e => !e.read).length,                        cls: '' },
-    'tickets':         { n: Store.get('tickets').filter(t => t.status !== 'closed').length,         cls: 'green' },
+    'statements':      { n: statements.filter(s => s.status === 'pending').length, cls: 'amber' },
+    'repeat-accounts': { n: repeats.filter(r => r.status === 'pending').length,    cls: '' },
+    'kyc-reviews':     { n: kyc.filter(k => k.status !== 'valid').length,          cls: 'amber' },
+    'risk-alerts':     { n: alerts.filter(a => a.status === 'active').length,      cls: '' },
+    'support-emails':  { n: emails.filter(e => !e.read).length,                   cls: '' },
+    'tickets':         { n: tickets.filter(t => t.status !== 'closed').length,    cls: 'green' },
   };
   Object.entries(counts).forEach(([page, { n, cls }]) => {
     const link = document.querySelector(`.nav-link[data-page="${page}"]`);
@@ -470,11 +462,13 @@ function updateMobileBottomNav(page) {
   document.querySelectorAll('.mbn-item').forEach(item => {
     item.classList.toggle('active', item.dataset.page === page);
   });
-  // Dot indicators
+  const statements = Store.get('statements');
+  const alerts     = Store.get('alerts');
+  const emails     = Store.get('emails');
   const dotMap = {
-    'mbn-dot-statements': Store.get('statements').filter(s => s.status === 'pending').length > 0,
-    'mbn-dot-alerts':     Store.get('alerts').filter(a => a.status === 'active').length > 0,
-    'mbn-dot-emails':     Store.get('emails').filter(e => !e.read).length > 0,
+    'mbn-dot-statements': statements.filter(s => s.status === 'pending').length > 0,
+    'mbn-dot-alerts':     alerts.filter(a => a.status === 'active').length > 0,
+    'mbn-dot-emails':     emails.filter(e => !e.read).length > 0,
   };
   Object.entries(dotMap).forEach(([id, show]) => {
     const el = document.getElementById(id);
